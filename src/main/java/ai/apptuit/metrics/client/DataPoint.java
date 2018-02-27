@@ -115,8 +115,9 @@ public class DataPoint {
 
     Map<String, String> tagsToMarshall = getTags();
     if (globalTags != null) {
-      tagsToMarshall = new LinkedHashMap<>(getTags());
-      tagsToMarshall.putAll(globalTags);
+      LinkedHashMap<String, String> t = new LinkedHashMap<>(tagsToMarshall);
+      t.putAll(globalTags);
+      tagsToMarshall = t;
     }
     tagsToMarshall.forEach((key, value) -> ps.append(" ").append(key).append("=").append(value));
   }

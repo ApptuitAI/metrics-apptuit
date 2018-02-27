@@ -30,16 +30,16 @@ import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Rajiv Shivane
  */
 public class ApptuitPutClient {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ApptuitPutClient.class);
+  private static final Logger LOGGER = Logger.getLogger(ApptuitPutClient.class.getName());
 
   private static final boolean DEBUG = true;
   private static final boolean GZIP = true;
@@ -108,7 +108,7 @@ public class ApptuitPutClient {
       debug("-------------------" + status + "---------------------");
     } catch (IOException e) {
       //TODO: Return status to caller, so they can choose to retry etc
-      LOGGER.error("Error posting data", e);
+      LOGGER.log(Level.SEVERE, "Error posting data", e);
       return;
     }
 
@@ -126,7 +126,7 @@ public class ApptuitPutClient {
       String responseBody = consumeResponse(inputStr, Charset.forName(encoding));
       debug(responseBody);
     } catch (IOException e) {
-      LOGGER.error("Error draining response", e);
+      LOGGER.log(Level.SEVERE, "Error draining response", e);
     }
 
   }
@@ -148,7 +148,7 @@ public class ApptuitPutClient {
         }
       }
     } catch (IOException e) {
-      LOGGER.error("Error reading response", e);
+      LOGGER.log(Level.SEVERE, "Error reading response", e);
     }
     return body == null ? "Response too long" : body.toString();
   }
