@@ -7,11 +7,13 @@
 
 # metrics-apptuit
 
-A reporter to send metrics from dropwizard/codahale metrics library to Apptuit.AI.
+A reporter to send metrics from [dropwizard/codahale metrics](http://metrics.dropwizard.io/) library to Apptuit.AI.
 
 ## Usage
 
-Refer the **[API integration guide](https://github.com/ApptuitAI/JInsight/wiki/UsageDropwizard)** for help instrumenting your code with metrics.
+If your application uses [Dropwizard metrics](http://metrics.dropwizard.io/) library to collect metrics, follow the **[Dropwizard metrics integration guide](https://github.com/ApptuitAI/metrics-apptuit/wiki/UsageDropwizard)** to configure Dropwizard to publish the metrics to Apptuit.AI.
+
+If your application uses a custom/different library to collect metrics (instead of Dropwizard metrics), you could use the `ApptuitPutClient` to publish metrics directly to Apptuit. Refer the **[Put client reference guide](https://github.com/ApptuitAI/metrics-apptuit/wiki/UsagePutClient)** for help publishing metrics from your code to Apptuit.AI.
 
 
 ## LICENSE
