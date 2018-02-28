@@ -18,6 +18,7 @@ package ai.apptuit.metrics.dropwizard;
 
 import ai.apptuit.metrics.client.ApptuitPutClient;
 import ai.apptuit.metrics.client.DataPoint;
+import ai.apptuit.metrics.client.XCollectorForwarder;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
@@ -72,6 +73,10 @@ public class ApptuitReporter extends ScheduledReporter {
           dataPoints.forEach(dp -> dp.toTextLine(System.out, globalTags));
         };
         break;
+      case XCOLLECTOR:
+        XCollectorForwarder forwarder = new XCollectorForwarder(globalTags);
+        this.dataPointsReporter = forwarder::forward;
+        break;
       case API_PUT:
       default:
         ApptuitPutClient putClient = new ApptuitPutClient(key, globalTags, apiUrl);
@@ -118,7 +123,7 @@ public class ApptuitReporter extends ScheduledReporter {
   }
 
   public enum ReportingMode {
-    NO_OP, SYS_OUT, API_PUT
+    NO_OP, SYS_OUT, XCOLLECTOR, API_PUT
   }
 
   public interface DataPointsReporter {
