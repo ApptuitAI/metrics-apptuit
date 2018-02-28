@@ -142,7 +142,9 @@ public class ApptuitReporterTest {
     factory.setRateUnit(TimeUnit.SECONDS);
     factory.setDurationUnit(TimeUnit.MILLISECONDS);
     factory.addGlobalTag("globalTag1", "globalValue1");
-    factory.setApiKey("dummy");
+    if (mode == ReportingMode.API_PUT) {
+      factory.setApiKey("dummy");
+    }
 
     factory.setReportingMode(mode);
 
