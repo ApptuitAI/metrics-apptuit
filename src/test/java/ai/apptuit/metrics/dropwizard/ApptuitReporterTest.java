@@ -19,7 +19,8 @@ package ai.apptuit.metrics.dropwizard;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
 
-import ai.apptuit.metrics.dropwizard.MockApptuitPutClient.PutListener;
+import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
+import ai.apptuit.metrics.dropwizard.BaseMockClient.DataListener;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
@@ -44,62 +45,110 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 public class ApptuitReporterTest {
 
-  private MockApptuitPutClient putClient;
   private MetricRegistry registry;
   private int period = 5;
-  private ScheduledReporter reporter;
 
   @Before
   public void setUp() throws Exception {
-    putClient = MockApptuitPutClient.getInstance();
-
     registry = new MetricRegistry();
+  }
 
+  @After
+  public void tearDown() throws Exception {
+  }
+
+  @Test
+  public void testPutReporter() throws Exception {
+    MockApptuitPutClient putClient = MockApptuitPutClient.getInstance();
+
+    try (ScheduledReporter ignored = createReporter()) {
+
+      UUID uuid = UUID.randomUUID();
+      String metricName = "ApptuitReporterTest.testPutReporter." + uuid.toString();
+      int expectedCount = 2;
+
+      AtomicBoolean foundMetric = new AtomicBoolean(false);
+      AtomicInteger lastSeenCount = new AtomicInteger(-1);
+      DataListener listener = dataPoints -> {
+        dataPoints.forEach(dataPoint -> {
+          if (!metricName.equals(dataPoint.getMetric())) {
+            return;
+          }
+          int i = dataPoint.getValue().intValue();
+          lastSeenCount.set(i);
+          if (i != 2) {
+            return;
+          }
+          foundMetric.set(true);
+        });
+      };
+      putClient.addPutListener(listener);
+
+      Counter counter = registry.counter(metricName);
+      counter.inc();
+      counter.inc();
+
+      await().atMost(period * 3, TimeUnit.SECONDS).untilTrue(foundMetric);
+      putClient.removePutListener(listener);
+
+      assertEquals(expectedCount, lastSeenCount.intValue());
+    }
+  }
+
+  @Test
+  public void testXCollectorReporter() throws Exception {
+    MockXCollectorForwarder forwarder = MockXCollectorForwarder.getInstance();
+
+    try (ScheduledReporter ignored = createReporter(ReportingMode.XCOLLECTOR)) {
+
+      UUID uuid = UUID.randomUUID();
+      String metricName = "ApptuitReporterTest.testXCollectorReporter." + uuid.toString();
+      int expectedCount = 2;
+
+      AtomicBoolean foundMetric = new AtomicBoolean(false);
+      AtomicInteger lastSeenCount = new AtomicInteger(-1);
+      DataListener listener = dataPoints -> {
+        dataPoints.forEach(dataPoint -> {
+          if (!metricName.equals(dataPoint.getMetric())) {
+            return;
+          }
+          int i = dataPoint.getValue().intValue();
+          lastSeenCount.set(i);
+          if (i != 2) {
+            return;
+          }
+          foundMetric.set(true);
+        });
+      };
+      forwarder.addPutListener(listener);
+
+      Counter counter = registry.counter(metricName);
+      counter.inc();
+      counter.inc();
+
+      await().atMost(period * 3, TimeUnit.SECONDS).untilTrue(foundMetric);
+      forwarder.removePutListener(listener);
+
+      assertEquals(expectedCount, lastSeenCount.intValue());
+    }
+  }
+
+  private ScheduledReporter createReporter() {
+    return createReporter(ReportingMode.API_PUT);
+  }
+
+  private ScheduledReporter createReporter(ReportingMode mode) {
     ApptuitReporterFactory factory = new ApptuitReporterFactory();
     factory.setRateUnit(TimeUnit.SECONDS);
     factory.setDurationUnit(TimeUnit.MILLISECONDS);
     factory.addGlobalTag("globalTag1", "globalValue1");
     factory.setApiKey("dummy");
 
+    factory.setReportingMode(mode);
+
+    ScheduledReporter reporter;
     reporter = factory.build(registry);
     reporter.start(period, TimeUnit.SECONDS);
-  }
-
-  @After
-  public void tearDown() throws Exception {
-    reporter.close();
-  }
-
-  @Test
-  public void testReporter() throws Exception {
-
-    UUID uuid = UUID.randomUUID();
-    String metricName = "ApptuitReporterTest.testReporter." + uuid.toString();
-    int expectedCount=2;
-
-    AtomicBoolean foundMetric = new AtomicBoolean(false);
-    AtomicInteger lastSeenCount = new AtomicInteger(-1);
-    PutListener listener = dataPoints -> {
-      dataPoints.forEach(dataPoint -> {
-        if (!metricName.equals(dataPoint.getMetric()))
-          return;
-        int i = dataPoint.getValue().intValue();
-        lastSeenCount.set(i);
-        if (i != 2)
-          return;
-        foundMetric.set(true);
-      });
-    };
-    putClient.addPutListener(listener);
-
-    Counter counter = registry.counter(metricName);
-    counter.inc();
-    counter.inc();
-
-
-    await().atMost(period*3, TimeUnit.SECONDS).untilTrue(foundMetric);
-    putClient.removePutListener(listener);
-
-    assertEquals(expectedCount, lastSeenCount.intValue());
+    return reporter;
   }
 }

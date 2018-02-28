@@ -20,17 +20,17 @@ import static org.mockito.Matchers.anyCollectionOf;
 import static org.mockito.Mockito.doAnswer;
 import static org.powermock.api.mockito.PowerMockito.mock;
 
-import ai.apptuit.metrics.client.ApptuitPutClient;
 import ai.apptuit.metrics.client.DataPoint;
+import ai.apptuit.metrics.client.XCollectorForwarder;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 
 /**
  * @author Rajiv Shivane
  */
-public class MockApptuitPutClient extends BaseMockClient {
+public class MockXCollectorForwarder extends BaseMockClient {
 
-  private static final MockApptuitPutClient instance = new MockApptuitPutClient();
+  private static final MockXCollectorForwarder instance = new MockXCollectorForwarder();
 
   static {
     try {
@@ -40,22 +40,22 @@ public class MockApptuitPutClient extends BaseMockClient {
     }
   }
 
-  private MockApptuitPutClient() {
+  private MockXCollectorForwarder() {
   }
 
-  public static MockApptuitPutClient getInstance() {
+  public static MockXCollectorForwarder getInstance() {
     return instance;
   }
 
   public static void initialize() throws Exception {
-    ApptuitPutClient mockPutClient = mock(ApptuitPutClient.class);
-    PowerMockito.whenNew(ApptuitPutClient.class).withAnyArguments().thenReturn(mockPutClient);
+    XCollectorForwarder forwarder = mock(XCollectorForwarder.class);
+    PowerMockito.whenNew(XCollectorForwarder.class).withAnyArguments().thenReturn(forwarder);
 
     doAnswer((Answer<Void>) invocation -> {
       Object[] args = invocation.getArguments();
       getInstance().listeners.forEach(listener -> listener.onData(getDataPoints(args)));
       return null;
-    }).when(mockPutClient).put(anyCollectionOf(DataPoint.class));
+    }).when(forwarder).forward(anyCollectionOf(DataPoint.class));
 
   }
 
