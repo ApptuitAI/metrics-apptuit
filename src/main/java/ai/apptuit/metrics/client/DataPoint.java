@@ -119,7 +119,7 @@ public class DataPoint {
       t.putAll(globalTags);
       tagsToMarshall = t;
     }
-    tagsToMarshall.forEach((key, value) -> ps.append(" ").append(key).append("=").append(value));
+    tagsToMarshall.forEach((key, val) -> ps.append(" ").append(key).append("=").append(val));
   }
 
   @Override
