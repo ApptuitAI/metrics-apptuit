@@ -120,6 +120,7 @@ public class TagEncodedMetricNameTest {
   @Test
   public void testUnequal() throws Exception {
     assertFalse(encodedMetricName.equals(null));
+    assertFalse(encodedMetricName.equals(new Object()));
     assertFalse(encodedMetricName.equals(TagEncodedMetricName.decode("asdf.pqr")));
     assertFalse(encodedMetricName.equals(TagEncodedMetricName.decode("asdf[k:v]")));
   }

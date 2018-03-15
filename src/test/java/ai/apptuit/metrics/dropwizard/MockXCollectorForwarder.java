@@ -32,18 +32,11 @@ public class MockXCollectorForwarder extends BaseMockClient {
 
   private static final MockXCollectorForwarder instance = new MockXCollectorForwarder();
 
-  static {
-    try {
-      initialize();
-    } catch (Exception e) {
-      throw new ExceptionInInitializerError(e);
-    }
-  }
-
   private MockXCollectorForwarder() {
   }
 
-  public static MockXCollectorForwarder getInstance() {
+  public static MockXCollectorForwarder getInstance() throws Exception {
+    initialize();
     return instance;
   }
 

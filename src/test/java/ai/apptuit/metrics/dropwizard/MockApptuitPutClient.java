@@ -32,18 +32,11 @@ public class MockApptuitPutClient extends BaseMockClient {
 
   private static final MockApptuitPutClient instance = new MockApptuitPutClient();
 
-  static {
-    try {
-      initialize();
-    } catch (Exception e) {
-      throw new ExceptionInInitializerError(e);
-    }
-  }
-
   private MockApptuitPutClient() {
   }
 
-  public static MockApptuitPutClient getInstance() {
+  public static MockApptuitPutClient getInstance() throws Exception {
+    initialize();
     return instance;
   }
 

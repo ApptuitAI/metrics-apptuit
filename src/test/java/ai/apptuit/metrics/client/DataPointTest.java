@@ -23,6 +23,8 @@ import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -90,6 +92,55 @@ public class DataPointTest {
         tagEncodedMetricName.getTags());
     assertEquals(dp1, dp2);
     assertEquals(dp1.hashCode(), dp2.hashCode());
+  }
+
+  @Test
+  public void testNotEqualsName() throws Exception {
+    long epoch = System.currentTimeMillis();
+    long value = 1515;
+    DataPoint dp1 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
+        tagEncodedMetricName.getTags());
+    DataPoint dp2 = new DataPoint(tagEncodedMetricName.getMetricName() + "x", epoch, value,
+        tagEncodedMetricName.getTags());
+    assertNotEquals(dp1, dp2);
+    assertNotEquals(dp1.hashCode(), dp2.hashCode());
+  }
+
+  @Test
+  public void testNotEqualsTime() throws Exception {
+    long epoch = System.currentTimeMillis();
+    long value = 1515;
+    DataPoint dp1 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
+        tagEncodedMetricName.getTags());
+    DataPoint dp2 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch + 1, value,
+        tagEncodedMetricName.getTags());
+    assertNotEquals(dp1, dp2);
+    assertNotEquals(dp1.hashCode(), dp2.hashCode());
+  }
+
+  @Test
+  public void testNotEqualsValue() throws Exception {
+    long epoch = System.currentTimeMillis();
+    long value = 1515;
+    DataPoint dp1 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
+        tagEncodedMetricName.getTags());
+    DataPoint dp2 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value + 1,
+        tagEncodedMetricName.getTags());
+    assertNotEquals(dp1, dp2);
+    assertNotEquals(dp1.hashCode(), dp2.hashCode());
+  }
+
+  @Test
+  public void testNotEqualsTags() throws Exception {
+    long epoch = System.currentTimeMillis();
+    long value = 1515;
+    Map<String, String> tags = tagEncodedMetricName.getTags();
+    DataPoint dp1 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value, tags);
+    Map<String, String> newtags = new HashMap<>(tags);
+    newtags.put("key", "value");
+    DataPoint dp2 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value, newtags);
+    assertNotEquals(dp1, dp2);
+    assertNotEquals(dp1.hashCode(), dp2.hashCode());
   }
 
   @Test(expected = IllegalArgumentException.class)

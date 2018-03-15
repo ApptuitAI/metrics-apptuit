@@ -19,15 +19,19 @@ package ai.apptuit.metrics.dropwizard;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
 
+import ai.apptuit.metrics.client.DataPoint;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.dropwizard.BaseMockClient.DataListener;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +50,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 public class ApptuitReporterTest {
 
   private MetricRegistry registry;
-  private int period = 5;
+  private int period = 1;
 
   @Before
   public void setUp() throws Exception {
@@ -57,84 +61,151 @@ public class ApptuitReporterTest {
   public void tearDown() throws Exception {
   }
 
+  //TODO add test cases for Hist, Meter, Timer
+
   @Test
-  public void testPutReporter() throws Exception {
-    MockApptuitPutClient putClient = MockApptuitPutClient.getInstance();
-
-    try (ScheduledReporter ignored = createReporter()) {
-
-      UUID uuid = UUID.randomUUID();
-      String metricName = "ApptuitReporterTest.testPutReporter." + uuid.toString();
-      int expectedCount = 2;
-
-      AtomicBoolean foundMetric = new AtomicBoolean(false);
-      AtomicInteger lastSeenCount = new AtomicInteger(-1);
-      DataListener listener = dataPoints -> {
-        dataPoints.forEach(dataPoint -> {
-          if (!metricName.equals(dataPoint.getMetric())) {
-            return;
-          }
-          int i = dataPoint.getValue().intValue();
-          lastSeenCount.set(i);
-          if (i != 2) {
-            return;
-          }
-          foundMetric.set(true);
-        });
-      };
-      putClient.addPutListener(listener);
-
-      Counter counter = registry.counter(metricName);
-      counter.inc();
-      counter.inc();
-
-      await().atMost(period * 3, TimeUnit.SECONDS).untilTrue(foundMetric);
-      putClient.removePutListener(listener);
-
-      assertEquals(expectedCount, lastSeenCount.intValue());
-    }
+  public void testCounterPut() throws Exception {
+    testCounter(ReportingMode.API_PUT,
+        "testCounterPut." + UUID.randomUUID().toString());
   }
 
   @Test
-  public void testXCollectorReporter() throws Exception {
-    MockXCollectorForwarder forwarder = MockXCollectorForwarder.getInstance();
-
-    try (ScheduledReporter ignored = createReporter(ReportingMode.XCOLLECTOR)) {
-
-      UUID uuid = UUID.randomUUID();
-      String metricName = "ApptuitReporterTest.testXCollectorReporter." + uuid.toString();
-      int expectedCount = 2;
-
-      AtomicBoolean foundMetric = new AtomicBoolean(false);
-      AtomicInteger lastSeenCount = new AtomicInteger(-1);
-      DataListener listener = dataPoints -> {
-        dataPoints.forEach(dataPoint -> {
-          if (!metricName.equals(dataPoint.getMetric())) {
-            return;
-          }
-          int i = dataPoint.getValue().intValue();
-          lastSeenCount.set(i);
-          if (i != 2) {
-            return;
-          }
-          foundMetric.set(true);
-        });
-      };
-      forwarder.addPutListener(listener);
-
-      Counter counter = registry.counter(metricName);
-      counter.inc();
-      counter.inc();
-
-      await().atMost(period * 3, TimeUnit.SECONDS).untilTrue(foundMetric);
-      forwarder.removePutListener(listener);
-
-      assertEquals(expectedCount, lastSeenCount.intValue());
-    }
+  public void testCounterXCollector() throws Exception {
+    testCounter(ReportingMode.XCOLLECTOR,
+        "testCounterXCollector." + UUID.randomUUID().toString());
   }
 
-  private ScheduledReporter createReporter() {
-    return createReporter(ReportingMode.API_PUT);
+  private void testCounter(ReportingMode reportingMode, String metricName) throws Exception {
+
+    long expectedCount = 2;
+
+    List<DataPoint> reportedPoints = new ArrayList<>();
+
+    testMetric(reportingMode, () -> {
+      Counter counter = registry.counter(metricName);
+      for (int i = 0; i < expectedCount; i++) {
+        counter.inc();
+      }
+    }, dataPoints -> {
+      reportedPoints.clear();
+      dataPoints.forEach(dataPoint -> {
+        if (!metricName.equals(dataPoint.getMetric())) {
+          return;
+        }
+        reportedPoints.add(dataPoint);
+      });
+    }, () -> reportedPoints.size() > 0);
+    assertEquals(1, reportedPoints.size());
+    assertEquals(expectedCount, reportedPoints.get(0).getValue());
+  }
+
+  @Test
+  public void testGaugeDoublePut() throws Exception {
+    testGaugeDouble(ReportingMode.API_PUT,
+        "testGaugeDoublePut." + UUID.randomUUID().toString());
+  }
+
+  @Test
+  public void testGaugeDoubleXCollector() throws Exception {
+    testGaugeDouble(ReportingMode.XCOLLECTOR,
+        "testGaugeDoubleXCollector." + UUID.randomUUID().toString());
+  }
+
+  private void testGaugeDouble(ReportingMode reportingMode, String metricName) throws Exception {
+    double expectedValue = 2;
+    testGauge(reportingMode, metricName, expectedValue);
+  }
+
+
+  @Test
+  public void testGaugeBigDecimalPut() throws Exception {
+    testGaugeBigDecimal(ReportingMode.API_PUT,
+        "testGaugeBigDecimalPut." + UUID.randomUUID().toString());
+  }
+
+  @Test
+  public void testGaugeBigDecimalXCollector() throws Exception {
+    testGaugeBigDecimal(ReportingMode.XCOLLECTOR,
+        "testGaugeBigDecimalXCollector." + UUID.randomUUID().toString());
+  }
+
+  private void testGaugeBigDecimal(ReportingMode reportingMode, String metricName)
+      throws Exception {
+    BigDecimal expectedValue = new BigDecimal(2);
+    testGauge(reportingMode, metricName, expectedValue);
+  }
+
+
+  @Test
+  public void testGaugeBigIntegerPut() throws Exception {
+    testGaugeBigInteger(ReportingMode.API_PUT,
+        "testGaugeBigIntegerPut." + UUID.randomUUID().toString());
+  }
+
+  @Test
+  public void testGaugeBigIntegerXCollector() throws Exception {
+    testGaugeBigInteger(ReportingMode.XCOLLECTOR,
+        "testGaugeBigIntegerXCollector." + UUID.randomUUID().toString());
+  }
+
+  private void testGaugeBigInteger(ReportingMode reportingMode, String metricName)
+      throws Exception {
+    BigInteger expectedValue = new BigInteger("2");
+    testGauge(reportingMode, metricName, expectedValue);
+  }
+
+
+  @Test
+  public void testGaugeIntegerPut() throws Exception {
+    testGaugeInteger(ReportingMode.API_PUT,
+        "testGaugeIntegerPut." + UUID.randomUUID().toString());
+  }
+
+  @Test
+  public void testGaugeIntegerXCollector() throws Exception {
+    testGaugeInteger(ReportingMode.XCOLLECTOR,
+        "testGaugeIntegerXCollector." + UUID.randomUUID().toString());
+  }
+
+  private void testGaugeInteger(ReportingMode reportingMode, String metricName)
+      throws Exception {
+    Integer expectedValue = new Integer("2");
+    testGauge(reportingMode, metricName, expectedValue);
+  }
+
+  private void testGauge(ReportingMode reportingMode, String metricName, Number expectedValue)
+      throws Exception {
+    List<DataPoint> reportedPoints = new ArrayList<>();
+
+    testMetric(reportingMode, () -> {
+      registry.gauge(metricName, () -> () -> expectedValue);
+    }, dataPoints -> {
+      reportedPoints.clear();
+      dataPoints.forEach(dataPoint -> {
+        if (!metricName.equals(dataPoint.getMetric())) {
+          return;
+        }
+        reportedPoints.add(dataPoint);
+      });
+    }, () -> reportedPoints.size() > 0);
+    assertEquals(1, reportedPoints.size());
+    //ApptuitReporter reports all Gauges as double ... even if the gauge value is int
+    assertEquals(expectedValue.doubleValue(), reportedPoints.get(0).getValue());
+  }
+
+  private void testMetric(ReportingMode reportingMode, Runnable metricUpdate, DataListener listener,
+      Callable<Boolean> awaitUntil) throws Exception {
+
+    BaseMockClient mockClient =
+        reportingMode == ReportingMode.API_PUT ? MockApptuitPutClient.getInstance()
+            : MockXCollectorForwarder.getInstance();
+
+    try (ScheduledReporter ignored = createReporter(reportingMode)) {
+      mockClient.addPutListener(listener);
+      metricUpdate.run();
+      await().atMost(period * 3, TimeUnit.SECONDS).until(awaitUntil);
+      mockClient.removePutListener(listener);
+    }
   }
 
   private ScheduledReporter createReporter(ReportingMode mode) {
@@ -148,8 +219,7 @@ public class ApptuitReporterTest {
 
     factory.setReportingMode(mode);
 
-    ScheduledReporter reporter;
-    reporter = factory.build(registry);
+    ScheduledReporter reporter = factory.build(registry);
     reporter.start(period, TimeUnit.SECONDS);
     return reporter;
   }
