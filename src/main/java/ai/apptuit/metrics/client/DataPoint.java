@@ -38,8 +38,14 @@ public class DataPoint {
   private final Map<String, String> tags;
 
   public DataPoint(String metricName, long epoch, Number value, Map<String, String> tags) {
+    if (metricName == null) {
+      throw new IllegalArgumentException("metricName cannot be null");
+    }
     this.metric = metricName;
     this.timestamp = epoch;
+    if (value == null) {
+      throw new IllegalArgumentException("Value cannot be null");
+    }
     this.value = value;
     if (tags == null) {
       throw new IllegalArgumentException("Tags cannot be null");
@@ -133,24 +139,18 @@ public class DataPoint {
 
     DataPoint dataPoint = (DataPoint) o;
 
-    if (timestamp != dataPoint.timestamp) {
-      return false;
-    }
-    if (metric != null ? !metric.equals(dataPoint.metric) : dataPoint.metric != null) {
-      return false;
-    }
-    if (value != null ? !value.equals(dataPoint.value) : dataPoint.value != null) {
-      return false;
-    }
-    return tags != null ? tags.equals(dataPoint.tags) : dataPoint.tags == null;
+    return timestamp == dataPoint.timestamp
+        && metric.equals(dataPoint.metric)
+        && value.equals(dataPoint.value)
+        && tags.equals(dataPoint.tags);
   }
 
   @Override
   public int hashCode() {
-    int result = metric != null ? metric.hashCode() : 0;
+    int result = metric.hashCode();
     result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
-    result = 31 * result + (value != null ? value.hashCode() : 0);
-    result = 31 * result + (tags != null ? tags.hashCode() : 0);
+    result = 31 * result + value.hashCode();
+    result = 31 * result + tags.hashCode();
     return result;
   }
 }

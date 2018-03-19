@@ -36,6 +36,9 @@ public class TagEncodedMetricName {
   private final String metricName;
 
   private TagEncodedMetricName(String metricName, Map<String, String> tags) {
+    if (metricName == null) {
+      throw new IllegalArgumentException("metricName cannot be null");
+    }
     this.metricName = metricName;
     if (tags == null) {
       this.tags = Collections.emptyMap();
@@ -151,16 +154,13 @@ public class TagEncodedMetricName {
 
     TagEncodedMetricName that = (TagEncodedMetricName) o;
 
-    if (metricName != null ? !metricName.equals(that.metricName) : that.metricName != null) {
-      return false;
-    }
-    return tags != null ? tags.equals(that.tags) : that.tags == null;
+    return metricName.equals(that.metricName) && tags.equals(that.tags);
   }
 
   @Override
   public int hashCode() {
-    int result = metricName != null ? metricName.hashCode() : 0;
-    result = 31 * result + (tags != null ? tags.hashCode() : 0);
+    int result = metricName.hashCode();
+    result = 31 * result + tags.hashCode();
     return result;
   }
 }
