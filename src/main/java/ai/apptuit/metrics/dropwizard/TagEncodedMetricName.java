@@ -34,6 +34,7 @@ public class TagEncodedMetricName {
   private static final char TAG_VALUE_SEPARATOR = ':';
   private final Map<String, String> tags;
   private final String metricName;
+  private String toString;
 
   private TagEncodedMetricName(String metricName, Map<String, String> tags) {
     if (metricName == null) {
@@ -124,23 +125,31 @@ public class TagEncodedMetricName {
     if (tags.isEmpty()) {
       return this.metricName;
     } else {
-      StringBuilder sb = new StringBuilder(this.metricName);
-      //sb.append("\n{\n");
-      sb.append("[");
-      String prefix = "";
-
-      for (Entry<String, String> tagValuePair : tags.entrySet()) {
-        sb.append(prefix);
-        sb.append(tagValuePair.getKey());
-        sb.append(TAG_VALUE_SEPARATOR);
-        sb.append(tagValuePair.getValue());
-        //prefix = ",\n";
-        prefix = ",";
+      if (toString != null) {
+        return toString;
       }
-      //sb.append("}\n");
-      sb.append("]");
-      return sb.toString();
+      toString = createStringRep();
+      return toString;
     }
+  }
+
+  private String createStringRep() {
+    StringBuilder sb = new StringBuilder(this.metricName);
+    //sb.append("\n{\n");
+    sb.append("[");
+    String prefix = "";
+
+    for (Entry<String, String> tagValuePair : tags.entrySet()) {
+      sb.append(prefix);
+      sb.append(tagValuePair.getKey());
+      sb.append(TAG_VALUE_SEPARATOR);
+      sb.append(tagValuePair.getValue());
+      //prefix = ",\n";
+      prefix = ",";
+    }
+    //sb.append("}\n");
+    sb.append("]");
+    return sb.toString();
   }
 
   @Override
