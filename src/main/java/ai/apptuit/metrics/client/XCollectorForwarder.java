@@ -92,6 +92,7 @@ public class XCollectorForwarder {
     DatagramPacket packet = new DatagramPacket(bytes, 0, idx, xcollectorAddress);
     try {
       socket.send(packet);
+      LOGGER.info(" Forwarded [" + idx+ "] bytes.");
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Error sending packet", e);
     }
