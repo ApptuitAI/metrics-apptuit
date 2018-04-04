@@ -38,15 +38,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Rajiv Shivane
  */
 public class ApptuitReporter extends ScheduledReporter {
 
+  private static final Logger LOGGER = Logger.getLogger(ApptuitReporter.class.getName());
   private static final boolean DEBUG = false;
   private static final ReportingMode DEFAULT_REPORTING_MODE = ReportingMode.API_PUT;
   private static final String REPORTER_NAME = "apptuit-reporter";
+
   private final Timer buildReportTimer;
   private final Timer sendReportTimer;
   private final DataPointsReporter dataPointsReporter;
@@ -90,30 +94,35 @@ public class ApptuitReporter extends ScheduledReporter {
       SortedMap<String, Histogram> histograms, SortedMap<String, Meter> meters,
       SortedMap<String, Timer> timers) {
 
-    DataPointCollector collector = new DataPointCollector(System.currentTimeMillis() / 1000);
+    try {
+      DataPointCollector collector = new DataPointCollector(System.currentTimeMillis() / 1000);
 
-    buildReportTimer.time(() -> {
-      debug("################");
+      buildReportTimer.time(() -> {
+        debug("################");
 
-      debug(">>>>>>>> Guages <<<<<<<<<");
-      gauges.forEach(collector::collectGauge);
-      debug(">>>>>>>> Counters <<<<<<<<<");
-      counters.forEach(collector::collectCounter);
-      debug(">>>>>>>> Histograms <<<<<<<<<");
-      histograms.forEach(collector::collectHistogram);
-      debug(">>>>>>>> Meters <<<<<<<<<");
-      meters.forEach(collector::collectMeter);
-      debug(">>>>>>>> Timers <<<<<<<<<");
-      timers.forEach(collector::collectTimer);
+        debug(">>>>>>>> Guages <<<<<<<<<");
+        gauges.forEach(collector::collectGauge);
+        debug(">>>>>>>> Counters <<<<<<<<<");
+        counters.forEach(collector::collectCounter);
+        debug(">>>>>>>> Histograms <<<<<<<<<");
+        histograms.forEach(collector::collectHistogram);
+        debug(">>>>>>>> Meters <<<<<<<<<");
+        meters.forEach(collector::collectMeter);
+        debug(">>>>>>>> Timers <<<<<<<<<");
+        timers.forEach(collector::collectTimer);
 
-      debug("################");
-    });
+        debug("################");
+      });
 
-    sendReportTimer.time(() -> {
-      Collection<DataPoint> dataPoints = collector.dataPoints;
-      dataPointsReporter.put(dataPoints);
-      //dataPoints.forEach(System.out::println);
-    });
+      sendReportTimer.time(() -> {
+        Collection<DataPoint> dataPoints = collector.dataPoints;
+        dataPointsReporter.put(dataPoints);
+        //dataPoints.forEach(System.out::println);
+      });
+    } catch (RuntimeException | Error e) {
+      LOGGER.log(Level.SEVERE, "Error reporting metrics.", e);
+    }
+
   }
 
   private void debug(Object s) {
