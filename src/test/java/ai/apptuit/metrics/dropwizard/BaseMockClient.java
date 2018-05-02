@@ -18,6 +18,7 @@ package ai.apptuit.metrics.dropwizard;
 import ai.apptuit.metrics.client.DataPoint;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -25,7 +26,7 @@ import java.util.List;
  */
 public abstract class BaseMockClient {
 
-  protected final List<DataListener> listeners = new ArrayList<>();
+  private final List<DataListener> listeners = Collections.synchronizedList(new ArrayList<>());
 
   public void addPutListener(DataListener listener) {
     listeners.add(listener);
@@ -33,6 +34,10 @@ public abstract class BaseMockClient {
 
   public boolean removePutListener(DataListener listener) {
     return listeners.remove(listener);
+  }
+
+  protected void notifyListeners(Collection<DataPoint> dataPoints) {
+    listeners.forEach(listener -> listener.onData(dataPoints));
   }
 
   public static interface DataListener {
