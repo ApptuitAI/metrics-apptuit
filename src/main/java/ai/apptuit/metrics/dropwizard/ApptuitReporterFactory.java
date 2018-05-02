@@ -16,14 +16,12 @@
 
 package ai.apptuit.metrics.dropwizard;
 
-import com.codahale.metrics.MetricAttribute;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -50,10 +48,6 @@ public class ApptuitReporterFactory {
   private Set<String> includes = Collections.emptySet();
 
   private boolean useRegexFilters = false;
-
-  private EnumSet<MetricAttribute> excludesAttributes = EnumSet.noneOf(MetricAttribute.class);
-
-  private EnumSet<MetricAttribute> includesAttributes = EnumSet.allOf(MetricAttribute.class);
 
   private Map<String, String> globalTags = new LinkedHashMap<>();
 
@@ -119,22 +113,6 @@ public class ApptuitReporterFactory {
     this.useRegexFilters = useRegexFilters;
   }
 
-  public EnumSet<MetricAttribute> getExcludesAttributes() {
-    return excludesAttributes;
-  }
-
-  public void setExcludesAttributes(EnumSet<MetricAttribute> excludesAttributes) {
-    this.excludesAttributes = excludesAttributes;
-  }
-
-  public EnumSet<MetricAttribute> getIncludesAttributes() {
-    return includesAttributes;
-  }
-
-  public void setIncludesAttributes(EnumSet<MetricAttribute> includesAttributes) {
-    this.includesAttributes = includesAttributes;
-  }
-
   public MetricFilter getFilter() {
     final StringMatchingStrategy stringMatchingStrategy = getUseRegexFilters()
         ? REGEX_STRING_MATCHING_STRATEGY : DEFAULT_STRING_MATCHING_STRATEGY;
@@ -146,14 +124,6 @@ public class ApptuitReporterFactory {
           && (getIncludes().isEmpty() || stringMatchingStrategy.containsMatch(getIncludes(), name));
     };
   }
-
-  protected Set<MetricAttribute> getDisabledAttributes() {
-    Set<MetricAttribute> retVal = new HashSet<>(EnumSet.allOf(MetricAttribute.class));
-    retVal.removeAll(getIncludesAttributes());
-    retVal.addAll(getExcludesAttributes());
-    return retVal;
-  }
-
 
   public ScheduledReporter build(MetricRegistry registry) {
     try {

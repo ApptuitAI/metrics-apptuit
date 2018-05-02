@@ -46,7 +46,7 @@ public class MockApptuitPutClient extends BaseMockClient {
 
     doAnswer((Answer<Void>) invocation -> {
       Object[] args = invocation.getArguments();
-      getInstance().listeners.forEach(listener -> listener.onData(getDataPoints(args)));
+      getInstance().notifyListeners(getDataPoints(args));
       return null;
     }).when(mockPutClient).put(anyCollectionOf(DataPoint.class));
 

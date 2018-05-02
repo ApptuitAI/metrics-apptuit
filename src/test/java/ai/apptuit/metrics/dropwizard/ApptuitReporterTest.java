@@ -23,6 +23,7 @@ import ai.apptuit.metrics.client.DataPoint;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.dropwizard.BaseMockClient.DataListener;
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import java.math.BigDecimal;
@@ -178,7 +179,7 @@ public class ApptuitReporterTest {
     List<DataPoint> reportedPoints = new ArrayList<>();
 
     testMetric(reportingMode, () -> {
-      registry.gauge(metricName, () -> () -> expectedValue);
+      registry.register(metricName, (Gauge<Number>) () -> expectedValue);
     }, dataPoints -> {
       reportedPoints.clear();
       dataPoints.forEach(dataPoint -> {

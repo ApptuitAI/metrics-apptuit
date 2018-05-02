@@ -37,6 +37,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -94,32 +95,43 @@ public class ApptuitReporter extends ScheduledReporter {
       SortedMap<String, Histogram> histograms, SortedMap<String, Meter> meters,
       SortedMap<String, Timer> timers) {
 
+    DataPointCollector collector = new DataPointCollector(System.currentTimeMillis() / 1000);
     try {
-      DataPointCollector collector = new DataPointCollector(System.currentTimeMillis() / 1000);
+      buildReportTimer.time(new Callable<Object>() {
+        @Override
+        public Object call() {
+          debug("################");
 
-      buildReportTimer.time(() -> {
-        debug("################");
+          debug(">>>>>>>> Guages <<<<<<<<<");
+          gauges.forEach(collector::collectGauge);
+          debug(">>>>>>>> Counters <<<<<<<<<");
+          counters.forEach(collector::collectCounter);
+          debug(">>>>>>>> Histograms <<<<<<<<<");
+          histograms.forEach(collector::collectHistogram);
+          debug(">>>>>>>> Meters <<<<<<<<<");
+          meters.forEach(collector::collectMeter);
+          debug(">>>>>>>> Timers <<<<<<<<<");
+          timers.forEach(collector::collectTimer);
 
-        debug(">>>>>>>> Guages <<<<<<<<<");
-        gauges.forEach(collector::collectGauge);
-        debug(">>>>>>>> Counters <<<<<<<<<");
-        counters.forEach(collector::collectCounter);
-        debug(">>>>>>>> Histograms <<<<<<<<<");
-        histograms.forEach(collector::collectHistogram);
-        debug(">>>>>>>> Meters <<<<<<<<<");
-        meters.forEach(collector::collectMeter);
-        debug(">>>>>>>> Timers <<<<<<<<<");
-        timers.forEach(collector::collectTimer);
-
-        debug("################");
+          debug("################");
+          return null;
+        }
       });
+    } catch (Exception | Error e) {
+      LOGGER.log(Level.SEVERE, "Error building metrics.", e);
+    }
 
-      sendReportTimer.time(() -> {
-        Collection<DataPoint> dataPoints = collector.dataPoints;
-        dataPointsReporter.put(dataPoints);
-        //dataPoints.forEach(System.out::println);
+    try {
+      sendReportTimer.time(new Callable<Object>() {
+        @Override
+        public Object call() {
+          Collection<DataPoint> dataPoints = collector.dataPoints;
+          dataPointsReporter.put(dataPoints);
+          //dataPoints.forEach(System.out::println);
+          return null;
+        }
       });
-    } catch (RuntimeException | Error e) {
+    } catch (Exception | Error e) {
       LOGGER.log(Level.SEVERE, "Error reporting metrics.", e);
     }
 
@@ -160,7 +172,7 @@ public class ApptuitReporter extends ScheduledReporter {
         if (!Double.isNaN((Double) value) && Double.isFinite((Double) value)) {
           addDataPoint(name, (Double) value);
         }
-      } else if (value != null && value instanceof Number) {
+      } else if (value instanceof Number) {
         addDataPoint(name, ((Number) value).doubleValue());
       }
     }
