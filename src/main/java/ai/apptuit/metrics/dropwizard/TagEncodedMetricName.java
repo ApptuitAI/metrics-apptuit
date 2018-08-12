@@ -17,6 +17,7 @@
 package ai.apptuit.metrics.dropwizard;
 
 import com.codahale.metrics.MetricRegistry;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,7 +28,7 @@ import java.util.regex.Pattern;
 /**
  * @author Rajiv Shivane
  */
-public class TagEncodedMetricName {
+public class TagEncodedMetricName implements Comparable<TagEncodedMetricName> {
 
   private static final Pattern TAG_ENCODED_METRICNAME_PATTERN = Pattern
       .compile("([\\w\\.-]+)\\[([\\w\\W]+)\\]");
@@ -131,6 +132,11 @@ public class TagEncodedMetricName {
       toString = createStringRep();
       return toString;
     }
+  }
+
+  @Override
+  public int compareTo(TagEncodedMetricName tagEncodedMetricName) {
+    return toString().compareTo(tagEncodedMetricName.toString());
   }
 
   private String createStringRep() {
