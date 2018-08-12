@@ -22,17 +22,15 @@ import static org.junit.Assert.assertEquals;
 import ai.apptuit.metrics.client.DataPoint;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.dropwizard.BaseMockClient.DataListener;
-import com.codahale.metrics.Counter;
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.ScheduledReporter;
+import com.codahale.metrics.*;
+import com.codahale.metrics.Timer;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -194,6 +192,67 @@ public class ApptuitReporterTest {
     assertEquals(expectedValue.doubleValue(), reportedPoints.get(0).getValue());
   }
 
+  @Test
+  public void testTimer() throws Exception {
+    String metricName = "testTimer";
+    String countMetric = metricName + ".count";
+
+    List<DataPoint> reportedPoints = new LinkedList<>();
+    Map<TagEncodedMetricName, DataPoint> reportedMetrics = new TreeMap<>();
+    Set<TagEncodedMetricName> expectedMetrics = getExpectedTimers(metricName);
+
+    testMetric(ReportingMode.API_PUT, () -> {
+      Timer timer = registry.timer(metricName);
+      timer.update(250L, TimeUnit.MILLISECONDS);
+    }, dataPoints -> {
+      dataPoints.forEach(dataPoint -> {
+        String reportedMetric = dataPoint.getMetric();
+        if (!reportedMetric.startsWith(metricName + ".")) {
+          return;
+        }
+        Map<String, String> filteredTags = new HashMap<>();
+        dataPoint.getTags().forEach((k, v) -> {
+          if (k.equals("quantile") || k.equals("window")) filteredTags.put(k, v);
+        });
+        reportedMetrics.put(TagEncodedMetricName.decode(reportedMetric).withTags(filteredTags), dataPoint);
+        reportedPoints.add(dataPoint);
+      });
+    }, () -> reportedPoints.size() >= expectedMetrics.size() + 2);
+    assertEquals(expectedMetrics, reportedMetrics.keySet());
+    assertEquals(1L, reportedMetrics.get(TagEncodedMetricName.decode(countMetric)).getValue());
+
+    List<DataPoint> countMetrics = new LinkedList<>();
+    reportedPoints.forEach(dataPoint -> {
+      if (dataPoint.getMetric().equals(countMetric)) countMetrics.add(dataPoint);
+    });
+    assertEquals(reportedPoints.size(), reportedMetrics.size() - 1 + countMetrics.size());
+  }
+
+  private Set<TagEncodedMetricName> getExpectedTimers(String metricName) {
+    Set<TagEncodedMetricName> expectedMetrics = new TreeSet<>();
+    TagEncodedMetricName root = TagEncodedMetricName.decode(metricName);
+    expectedMetrics.add(root.submetric("count"));
+
+    TagEncodedMetricName duration = root.submetric("duration");
+    expectedMetrics.add(duration.submetric("min"));
+    expectedMetrics.add(duration.submetric("max"));
+    expectedMetrics.add(duration.submetric("mean"));
+    expectedMetrics.add(duration.submetric("stddev"));
+    expectedMetrics.add(duration.withTags("quantile", "p50"));
+    expectedMetrics.add(duration.withTags("quantile", "p75"));
+    expectedMetrics.add(duration.withTags("quantile", "p95"));
+    expectedMetrics.add(duration.withTags("quantile", "p98"));
+    expectedMetrics.add(duration.withTags("quantile", "p99"));
+    expectedMetrics.add(duration.withTags("quantile", "p999"));
+
+    TagEncodedMetricName rate = root.submetric("rate");
+    expectedMetrics.add(rate.withTags("window", "1m"));
+    expectedMetrics.add(rate.withTags("window", "5m"));
+    expectedMetrics.add(rate.withTags("window", "15m"));
+
+    return expectedMetrics;
+  }
+
   private void testMetric(ReportingMode reportingMode, Runnable metricUpdate, DataListener listener,
       Callable<Boolean> awaitUntil) throws Exception {
 
@@ -204,7 +263,7 @@ public class ApptuitReporterTest {
     try (ScheduledReporter ignored = createReporter(reportingMode)) {
       mockClient.addPutListener(listener);
       metricUpdate.run();
-      await().atMost(period * 3, TimeUnit.SECONDS).until(awaitUntil);
+      await().atMost(period * 5, TimeUnit.SECONDS).until(awaitUntil);
       mockClient.removePutListener(listener);
     }
   }

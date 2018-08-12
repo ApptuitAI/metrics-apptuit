@@ -20,6 +20,7 @@ import ai.apptuit.metrics.client.ApptuitPutClient;
 import ai.apptuit.metrics.client.DataPoint;
 import ai.apptuit.metrics.client.XCollectorForwarder;
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.Counting;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
@@ -29,10 +30,12 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.Snapshot;
 import com.codahale.metrics.Timer;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +57,10 @@ public class ApptuitReporter extends ScheduledReporter {
 
   private final Timer buildReportTimer;
   private final Timer sendReportTimer;
+  private final Counter metricsSentCounter;
+  private final Counter pointsSentCounter;
   private final DataPointsReporter dataPointsReporter;
+  private final Map<TagEncodedMetricName, Long> lastReportedCount = new HashMap<>();
 
   protected ApptuitReporter(MetricRegistry registry, MetricFilter filter, TimeUnit rateUnit,
       TimeUnit durationUnit, Map<String, String> globalTags, String key, URL apiUrl,
@@ -63,6 +69,8 @@ public class ApptuitReporter extends ScheduledReporter {
 
     this.buildReportTimer = registry.timer("apptuit.reporter.report.build");
     this.sendReportTimer = registry.timer("apptuit.reporter.report.send");
+    this.metricsSentCounter = registry.counter("apptuit.reporter.metrics.sent.count");
+    this.pointsSentCounter = registry.counter("apptuit.reporter.points.sent.count");
 
     if (reportingMode == null) {
       reportingMode = DEFAULT_REPORTING_MODE;
@@ -114,6 +122,9 @@ public class ApptuitReporter extends ScheduledReporter {
           timers.forEach(collector::collectTimer);
 
           debug("################");
+          int numMetrics = gauges.size() + counters.size() + histograms.size() + meters.size() + timers.size();
+          metricsSentCounter.inc(numMetrics);
+          pointsSentCounter.inc(collector.dataPoints.size());
           return null;
         }
       });
@@ -184,23 +195,34 @@ public class ApptuitReporter extends ScheduledReporter {
 
     private void collectHistogram(String name, Histogram histogram) {
       TagEncodedMetricName rootMetric = TagEncodedMetricName.decode(name);
-      addDataPoint(rootMetric.submetric("count"), histogram.getCount());
-      reportSnapshot(rootMetric, histogram.getSnapshot());
+      collectCounting(rootMetric, histogram, () -> reportSnapshot(rootMetric, histogram.getSnapshot()));
     }
 
     private void collectMeter(String name, Meter meter) {
       TagEncodedMetricName rootMetric = TagEncodedMetricName.decode(name);
-      addDataPoint(rootMetric.submetric("count"), meter.getCount());
-      printMetered(rootMetric, meter);
+      collectCounting(rootMetric, meter, () -> reportMetered(rootMetric, meter));
     }
 
-    private void collectTimer(String name, Timer timer) {
+    private void collectTimer(String name, final Timer timer) {
       TagEncodedMetricName rootMetric = TagEncodedMetricName.decode(name);
-      addDataPoint(rootMetric.submetric("count"), timer.getCount());
-      printMetered(rootMetric, timer);
-      reportSnapshot(rootMetric, timer.getSnapshot());
+      collectCounting(rootMetric, timer, () -> {
+        reportSnapshot(rootMetric, timer.getSnapshot());
+        reportMetered(rootMetric, timer)
+        ;
+      });
     }
 
+
+    private <T extends Counting> void collectCounting(TagEncodedMetricName rootMetric, T metric,
+                                                      Runnable reportSubmetrics) {
+      long currentCount = metric.getCount();
+      addDataPoint(rootMetric.submetric("count"), currentCount);
+
+      Long lastCount = lastReportedCount.put(rootMetric, currentCount);
+      if (lastCount == null || lastCount != currentCount) {
+        reportSubmetrics.run();
+      }
+    }
 
     private void reportSnapshot(TagEncodedMetricName metric, Snapshot snapshot) {
       addDataPoint(metric.submetric("duration.min"), convertDuration(snapshot.getMin()));
@@ -221,7 +243,7 @@ public class ApptuitReporter extends ScheduledReporter {
           convertDuration(snapshot.get999thPercentile()));
     }
 
-    private void printMetered(TagEncodedMetricName metric, Metered meter) {
+    private void reportMetered(TagEncodedMetricName metric, Metered meter) {
       addDataPoint(metric.submetric("rate").withTags("window", "1m"),
           convertRate(meter.getOneMinuteRate()));
       addDataPoint(metric.submetric("rate").withTags("window", "5m"),
@@ -248,7 +270,6 @@ public class ApptuitReporter extends ScheduledReporter {
     }
 
     private void addDataPoint(TagEncodedMetricName name, Number value) {
-
       /*
       //TODO support disabled metric attributes
       if(getDisabledMetricAttributes().contains(type)) {
