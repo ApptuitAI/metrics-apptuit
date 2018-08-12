@@ -78,10 +78,10 @@ limitations under the License.
     <maven.compiler.source>1.8</maven.compiler.source>
     <java.version>1.8</java.version>
     <maven.version>3.2</maven.version>
-    <surefire.version>2.20.1</surefire.version>
+    <surefire.version>2.21.0</surefire.version>
     <junit.version>4.12</junit.version>
-    <powermock.version>1.7.3</powermock.version>
-    <jacoco.version>0.8.0</jacoco.version>
+    <powermock.version>1.7.4</powermock.version>
+    <jacoco.version>0.8.1</jacoco.version>
     <metrics.version>3.2.6</metrics.version>
 
     <!-- Acceptance Criteria -->
@@ -137,7 +137,7 @@ limitations under the License.
     <dependency>
       <groupId>org.awaitility</groupId>
       <artifactId>awaitility</artifactId>
-      <version>3.0.0</version>
+      <version>3.1.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -249,12 +249,12 @@ limitations under the License.
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>2.17</version>
+        <version>3.0.0</version>
         <dependencies>
           <dependency>
             <groupId>com.puppycrawl.tools</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>8.5</version>
+            <version>8.6</version>
           </dependency>
         </dependencies>
         <configuration>
