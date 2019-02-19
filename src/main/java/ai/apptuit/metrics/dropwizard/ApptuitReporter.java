@@ -77,6 +77,7 @@ public class ApptuitReporter extends ScheduledReporter {
     }
 
     switch (reportingMode) {
+      case PROMETHEUS:
       case NO_OP:
         this.dataPointsReporter = dataPoints -> {
         };
@@ -155,7 +156,7 @@ public class ApptuitReporter extends ScheduledReporter {
   }
 
   public enum ReportingMode {
-    NO_OP, SYS_OUT, XCOLLECTOR, API_PUT
+    NO_OP, SYS_OUT, XCOLLECTOR, API_PUT, PROMETHEUS
   }
 
   public interface DataPointsReporter {
