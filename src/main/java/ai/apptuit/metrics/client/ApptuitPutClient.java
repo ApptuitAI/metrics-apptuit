@@ -56,6 +56,8 @@ public class ApptuitPutClient {
 
   private static final URL DEFAULT_PUT_API_URI;
 
+  private final DataPoint.Sanitization sanitization;
+
   static {
     try {
       DEFAULT_PUT_API_URI = new URL("https://api.apptuit.ai/api/put?details");
@@ -70,18 +72,20 @@ public class ApptuitPutClient {
   private String token;
 
   public ApptuitPutClient(String token, Map<String, String> globalTags) {
-    this(token, globalTags, null);
+    this(token, globalTags, null, DataPoint.Sanitization.NON);
   }
 
-  public ApptuitPutClient(String token, Map<String, String> globalTags, URL apiEndPoint) {
+  public ApptuitPutClient(String token, Map<String, String> globalTags,
+                          URL apiEndPoint, DataPoint.Sanitization sanitization1) {
     this.globalTags = globalTags;
     this.token = token;
     this.apiEndPoint = (apiEndPoint != null) ? apiEndPoint : DEFAULT_PUT_API_URI;
+    this.sanitization = sanitization1;
   }
 
   public void put(Collection<DataPoint> dataPoints) {
 
-    DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags);
+    DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags, sanitization);
 
     HttpURLConnection urlConnection;
     int status;
@@ -100,7 +104,7 @@ public class ApptuitPutClient {
       urlConnection.setDoInput(true);
       urlConnection.setDoOutput(true);
       OutputStream outputStream = new BufferedOutputStream(urlConnection.getOutputStream(),
-          BUFFER_SIZE);
+              BUFFER_SIZE);
       entity.writeTo(outputStream);
       outputStream.flush();
 
@@ -122,7 +126,7 @@ public class ApptuitPutClient {
       }
 
       String encoding = urlConnection.getContentEncoding() == null ? "UTF-8"
-          : urlConnection.getContentEncoding();
+              : urlConnection.getContentEncoding();
       String responseBody = consumeResponse(inputStr, Charset.forName(encoding));
       debug(responseBody);
     } catch (IOException e) {
@@ -164,17 +168,21 @@ public class ApptuitPutClient {
     private final Collection<DataPoint> dataPoints;
     private final Map<String, String> globalTags;
     private final boolean doZip;
+    private final DataPoint.Sanitization sanitize;
 
     public DatapointsHttpEntity(Collection<DataPoint> dataPoints,
-        Map<String, String> globalTags) {
-      this(dataPoints, globalTags, GZIP);
+                                Map<String, String> globalTags,
+                                DataPoint.Sanitization sanitization) {
+      this(dataPoints, globalTags, sanitization, GZIP);
     }
 
     public DatapointsHttpEntity(Collection<DataPoint> dataPoints,
-        Map<String, String> globalTags, boolean doZip) {
+                                Map<String, String> globalTags,
+                                DataPoint.Sanitization sanitization, boolean doZip) {
       this.dataPoints = dataPoints;
       this.globalTags = globalTags;
       this.doZip = doZip;
+      this.sanitize = sanitization;
     }
 
     public void writeTo(OutputStream outputStream) throws IOException {
@@ -187,7 +195,7 @@ public class ApptuitPutClient {
       Iterator<DataPoint> iterator = dataPoints.iterator();
       while (iterator.hasNext()) {
         DataPoint dp = iterator.next();
-        dp.toJson(ps, globalTags);
+        dp.toJson(ps, globalTags, this.sanitize);
         if (iterator.hasNext()) {
           ps.println(",");
         }

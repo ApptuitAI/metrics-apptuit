@@ -63,8 +63,9 @@ public class ApptuitReporter extends ScheduledReporter {
   private final Map<TagEncodedMetricName, Long> lastReportedCount = new HashMap<>();
 
   protected ApptuitReporter(MetricRegistry registry, MetricFilter filter, TimeUnit rateUnit,
-      TimeUnit durationUnit, Map<String, String> globalTags, String key, URL apiUrl,
-      ReportingMode reportingMode) {
+                            TimeUnit durationUnit, Map<String, String> globalTags,
+                            String key, URL apiUrl,
+                            ReportingMode reportingMode, DataPoint.Sanitization sanitization) {
     super(registry, REPORTER_NAME, filter, rateUnit, durationUnit);
 
     this.buildReportTimer = registry.timer("apptuit.reporter.report.build");
@@ -77,23 +78,22 @@ public class ApptuitReporter extends ScheduledReporter {
     }
 
     switch (reportingMode) {
-      case PROMETHEUS:
       case NO_OP:
         this.dataPointsReporter = dataPoints -> {
         };
         break;
       case SYS_OUT:
         this.dataPointsReporter = dataPoints -> {
-          dataPoints.forEach(dp -> dp.toTextLine(System.out, globalTags));
+          dataPoints.forEach(dp -> dp.toTextLine(System.out, globalTags, sanitization));
         };
         break;
       case XCOLLECTOR:
-        XCollectorForwarder forwarder = new XCollectorForwarder(globalTags);
+        XCollectorForwarder forwarder = new XCollectorForwarder(globalTags, sanitization);
         this.dataPointsReporter = forwarder::forward;
         break;
       case API_PUT:
       default:
-        ApptuitPutClient putClient = new ApptuitPutClient(key, globalTags, apiUrl);
+        ApptuitPutClient putClient = new ApptuitPutClient(key, globalTags, apiUrl, sanitization);
         this.dataPointsReporter = putClient::put;
         break;
     }
@@ -101,8 +101,8 @@ public class ApptuitReporter extends ScheduledReporter {
 
   @Override
   public void report(SortedMap<String, Gauge> gauges, SortedMap<String, Counter> counters,
-      SortedMap<String, Histogram> histograms, SortedMap<String, Meter> meters,
-      SortedMap<String, Timer> timers) {
+                     SortedMap<String, Histogram> histograms, SortedMap<String, Meter> meters,
+                     SortedMap<String, Timer> timers) {
 
     DataPointCollector collector = new DataPointCollector(System.currentTimeMillis() / 1000);
     try {
@@ -156,7 +156,7 @@ public class ApptuitReporter extends ScheduledReporter {
   }
 
   public enum ReportingMode {
-    NO_OP, SYS_OUT, XCOLLECTOR, API_PUT, PROMETHEUS
+    NO_OP, SYS_OUT, XCOLLECTOR, API_PUT, SANITIZE
   }
 
   public interface DataPointsReporter {
@@ -231,26 +231,26 @@ public class ApptuitReporter extends ScheduledReporter {
       addDataPoint(metric.submetric("duration.mean"), convertDuration(snapshot.getMean()));
       addDataPoint(metric.submetric("duration.stddev"), convertDuration(snapshot.getStdDev()));
       addDataPoint(metric.submetric("duration").withTags("quantile", "p50"),
-          convertDuration(snapshot.getMedian()));
+              convertDuration(snapshot.getMedian()));
       addDataPoint(metric.submetric("duration").withTags("quantile", "p75"),
-          convertDuration(snapshot.get75thPercentile()));
+              convertDuration(snapshot.get75thPercentile()));
       addDataPoint(metric.submetric("duration").withTags("quantile", "p95"),
-          convertDuration(snapshot.get95thPercentile()));
+              convertDuration(snapshot.get95thPercentile()));
       addDataPoint(metric.submetric("duration").withTags("quantile", "p98"),
-          convertDuration(snapshot.get98thPercentile()));
+              convertDuration(snapshot.get98thPercentile()));
       addDataPoint(metric.submetric("duration").withTags("quantile", "p99"),
-          convertDuration(snapshot.get99thPercentile()));
+              convertDuration(snapshot.get99thPercentile()));
       addDataPoint(metric.submetric("duration").withTags("quantile", "p999"),
-          convertDuration(snapshot.get999thPercentile()));
+              convertDuration(snapshot.get999thPercentile()));
     }
 
     private void reportMetered(TagEncodedMetricName metric, Metered meter) {
       addDataPoint(metric.submetric("rate").withTags("window", "1m"),
-          convertRate(meter.getOneMinuteRate()));
+              convertRate(meter.getOneMinuteRate()));
       addDataPoint(metric.submetric("rate").withTags("window", "5m"),
-          convertRate(meter.getFiveMinuteRate()));
+              convertRate(meter.getFiveMinuteRate()));
       addDataPoint(metric.submetric("rate").withTags("window", "15m"),
-          convertRate(meter.getFifteenMinuteRate()));
+              convertRate(meter.getFifteenMinuteRate()));
       //addDataPoint(rootMetric.submetric("rate", "window", "all"), epoch, meter.getMeanRate());
     }
 

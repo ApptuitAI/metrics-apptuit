@@ -31,6 +31,9 @@ import java.util.Map.Entry;
  * @author Rajiv Shivane
  */
 public class DataPoint {
+  public enum Sanitization {
+    NON, APPTUIT, PROMETHEUS
+  }
 
   private final String metric;
   private final long timestamp;
@@ -73,16 +76,16 @@ public class DataPoint {
   @Override
   public String toString() {
     StringWriter out = new StringWriter();
-    toTextPlain(new PrintWriter(out), null);
+    toTextPlain(new PrintWriter(out), null, Sanitization.NON);
     return out.toString();
   }
 
-  public void toJson(PrintStream ps, Map<String, String> globalTags) {
+  public void toJson(PrintStream ps, Map<String, String> globalTags, Sanitization sanitize) {
     ps.append("{");
     {
-      ps.append("\n\"metric\":\"").append(getMetric()).append("\",")
-          .append("\n\"timestamp\":").append(Long.toString(getTimestamp())).append(",")
-          .append("\n\"value\":").append(String.valueOf(getValue()));
+      ps.append("\n\"metric\":\"").append(sanitizer(getMetric(), sanitize)).append("\",")
+              .append("\n\"timestamp\":").append(Long.toString(getTimestamp())).append(",")
+              .append("\n\"value\":").append(String.valueOf(getValue()));
       ps.append(",\n\"tags\": {");
 
       Map<String, String> tagsToMarshall = new LinkedHashMap<>(getTags());
@@ -92,8 +95,8 @@ public class DataPoint {
       Iterator<Entry<String, String>> iterator = tagsToMarshall.entrySet().iterator();
       while (iterator.hasNext()) {
         Entry<String, String> tag = iterator.next();
-        ps.append("\n\"").append(tag.getKey()).append("\":\"")
-            .append(tag.getValue()).append("\"");
+        ps.append("\n\"").append(sanitizer(tag.getKey(), sanitize)).append("\":\"")
+                .append(tag.getValue()).append("\"");
         if (iterator.hasNext()) {
           ps.append(",");
         }
@@ -103,10 +106,10 @@ public class DataPoint {
     ps.append("}");
   }
 
-  public void toTextLine(OutputStream out, Map<String, String> globalTags) {
+  public void toTextLine(OutputStream out, Map<String, String> globalTags, Sanitization sanitize) {
     try {
       PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, "UTF-8"));
-      toTextPlain(writer, globalTags);
+      toTextPlain(writer, globalTags, sanitize);
       writer.append('\n');
       writer.flush();
     } catch (UnsupportedEncodingException e) {
@@ -114,10 +117,25 @@ public class DataPoint {
     }
   }
 
-  private void toTextPlain(PrintWriter ps, Map<String, String> globalTags) {
-    ps.append(getMetric()).append(" ")
-        .append(Long.toString(getTimestamp())).append(" ")
-        .append(String.valueOf(getValue()));
+  private String sanitizer(String unSanitizedString, Sanitization sanitization) {
+    if (sanitization == Sanitization.PROMETHEUS) {
+      unSanitizedString = ((Character.isDigit(unSanitizedString.charAt(0)) ? "_" : "")
+              + unSanitizedString).replaceAll("[^a-zA-Z0-9_]", "_")
+              .replaceAll("[_]+", "_");
+      return unSanitizedString;
+    } else if (sanitization == Sanitization.APPTUIT) {
+      unSanitizedString = unSanitizedString.replaceAll("[^\\p{L}\\-./_0-9]+", "_")
+              .replaceAll("[_]+", "_");
+      return unSanitizedString;
+    } else {
+      return unSanitizedString;
+    }
+  }
+
+  private void toTextPlain(PrintWriter ps, Map<String, String> globalTags, Sanitization sanitize) {
+    ps.append(sanitizer(getMetric(), sanitize)).append(" ")
+            .append(Long.toString(getTimestamp())).append(" ")
+            .append(String.valueOf(getValue()));
 
     Map<String, String> tagsToMarshall = getTags();
     if (globalTags != null) {
@@ -125,7 +143,8 @@ public class DataPoint {
       t.putAll(globalTags);
       tagsToMarshall = t;
     }
-    tagsToMarshall.forEach((key, val) -> ps.append(" ").append(key).append("=").append(val));
+    tagsToMarshall.forEach((key, val) -> ps.append(" ")
+            .append(sanitizer(key, sanitize)).append("=").append(val));
   }
 
   @Override
@@ -140,9 +159,9 @@ public class DataPoint {
     DataPoint dataPoint = (DataPoint) o;
 
     return timestamp == dataPoint.timestamp
-        && metric.equals(dataPoint.metric)
-        && value.equals(dataPoint.value)
-        && tags.equals(dataPoint.tags);
+            && metric.equals(dataPoint.metric)
+            && value.equals(dataPoint.value)
+            && tags.equals(dataPoint.tags);
   }
 
   @Override

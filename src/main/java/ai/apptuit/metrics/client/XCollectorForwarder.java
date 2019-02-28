@@ -44,15 +44,18 @@ public class XCollectorForwarder {
 
   private final Map<String, String> globalTags;
   private final SocketAddress xcollectorAddress;
+  private final DataPoint.Sanitization sanitization;
   private DatagramSocket socket = null;
 
-  public XCollectorForwarder(Map<String, String> globalTags) {
-    this(globalTags, new InetSocketAddress(DEFAULT_HOST, DEFAULT_PORT));
+  public XCollectorForwarder(Map<String, String> globalTags, DataPoint.Sanitization sanitization) {
+    this(globalTags, new InetSocketAddress(DEFAULT_HOST, DEFAULT_PORT), sanitization);
   }
 
-  XCollectorForwarder(Map<String, String> globalTags, SocketAddress xcollectorAddress) {
+  XCollectorForwarder(Map<String, String> globalTags,
+                      SocketAddress xcollectorAddress, DataPoint.Sanitization sanitization) {
     this.globalTags = globalTags;
     this.xcollectorAddress = xcollectorAddress;
+    this.sanitization = sanitization;
   }
 
   public void forward(Collection<DataPoint> dataPoints) {
@@ -70,7 +73,7 @@ public class XCollectorForwarder {
 
     int idx = 0;
     for (DataPoint dp : dataPoints) {
-      dp.toTextLine(baos, globalTags);
+      dp.toTextLine(baos, globalTags, this.sanitization);
       int size = baos.size();
       if (size >= PACKET_SIZE) {
         sendPacket(baos, idx);
@@ -92,7 +95,7 @@ public class XCollectorForwarder {
     DatagramPacket packet = new DatagramPacket(bytes, 0, idx, xcollectorAddress);
     try {
       socket.send(packet);
-      LOGGER.info(" Forwarded [" + idx+ "] bytes.");
+      LOGGER.info(" Forwarded [" + idx + "] bytes.");
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Error sending packet", e);
     }
