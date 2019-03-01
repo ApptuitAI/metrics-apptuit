@@ -59,7 +59,7 @@ public class ApptuitReporterFactory {
 
   private ApptuitReporter.ReportingMode reportingMode;
 
-  private DataPoint.Sanitization sanitization = DataPoint.Sanitization.NON;
+  private DataPoint.Sanitizer sanitizer = DataPoint.Sanitizer.NO_OP_SANITZER;
 
   public void addGlobalTag(String tag, String value) {
     globalTags.put(tag, value);
@@ -117,12 +117,12 @@ public class ApptuitReporterFactory {
     this.useRegexFilters = useRegexFilters;
   }
 
-  public void setSanitization(DataPoint.Sanitization sanitization) {
-    this.sanitization = sanitization;
+  public void setSanitizer(DataPoint.Sanitizer sanitizer) {
+    this.sanitizer = sanitizer;
   }
 
-  public DataPoint.Sanitization getSanitization() {
-    return this.sanitization;
+  public DataPoint.Sanitizer getSanitizer() {
+    return this.sanitizer;
   }
 
   public MetricFilter getFilter() {
@@ -141,7 +141,7 @@ public class ApptuitReporterFactory {
     try {
       return new ApptuitReporter(registry, getFilter(), getRateUnit(), getDurationUnit(),
               globalTags, apiKey, apiUrl != null ? new URL(apiUrl) : null,
-              reportingMode, sanitization);
+              reportingMode, sanitizer);
     } catch (MalformedURLException e) {
       throw new IllegalArgumentException(e);
     }

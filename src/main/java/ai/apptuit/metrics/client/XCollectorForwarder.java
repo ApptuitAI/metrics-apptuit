@@ -44,21 +44,18 @@ public class XCollectorForwarder {
 
   private final Map<String, String> globalTags;
   private final SocketAddress xcollectorAddress;
-  private final DataPoint.Sanitization sanitization;
   private DatagramSocket socket = null;
 
-  public XCollectorForwarder(Map<String, String> globalTags, DataPoint.Sanitization sanitization) {
-    this(globalTags, new InetSocketAddress(DEFAULT_HOST, DEFAULT_PORT), sanitization);
+  public XCollectorForwarder(Map<String, String> globalTags) {
+    this(globalTags, new InetSocketAddress(DEFAULT_HOST, DEFAULT_PORT));
   }
 
-  XCollectorForwarder(Map<String, String> globalTags,
-                      SocketAddress xcollectorAddress, DataPoint.Sanitization sanitization) {
+  XCollectorForwarder(Map<String, String> globalTags, SocketAddress xcollectorAddress) {
     this.globalTags = globalTags;
     this.xcollectorAddress = xcollectorAddress;
-    this.sanitization = sanitization;
   }
 
-  public void forward(Collection<DataPoint> dataPoints) {
+  public void forward(Collection<DataPoint> dataPoints, DataPoint.Sanitizer sanitizer) {
 
     if (socket == null) {
       try {
@@ -73,7 +70,7 @@ public class XCollectorForwarder {
 
     int idx = 0;
     for (DataPoint dp : dataPoints) {
-      dp.toTextLine(baos, globalTags, this.sanitization);
+      dp.toTextLine(baos, globalTags, sanitizer);
       int size = baos.size();
       if (size >= PACKET_SIZE) {
         sendPacket(baos, idx);

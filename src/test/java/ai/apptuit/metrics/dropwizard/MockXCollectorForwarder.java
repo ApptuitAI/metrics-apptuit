@@ -16,6 +16,7 @@
 
 package ai.apptuit.metrics.dropwizard;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyCollectionOf;
 import static org.mockito.Mockito.doAnswer;
 import static org.powermock.api.mockito.PowerMockito.mock;
@@ -41,6 +42,7 @@ public class MockXCollectorForwarder extends BaseMockClient {
   }
 
   public static void initialize() throws Exception {
+
     XCollectorForwarder forwarder = mock(XCollectorForwarder.class);
     PowerMockito.whenNew(XCollectorForwarder.class).withAnyArguments().thenReturn(forwarder);
 
@@ -48,8 +50,7 @@ public class MockXCollectorForwarder extends BaseMockClient {
       Object[] args = invocation.getArguments();
       getInstance().notifyListeners(getDataPoints(args));
       return null;
-    }).when(forwarder).forward(anyCollectionOf(DataPoint.class));
-
+    }).when(forwarder).forward(anyCollectionOf(DataPoint.class), any(DataPoint.Sanitizer.class));
   }
 
   @SuppressWarnings("unchecked")

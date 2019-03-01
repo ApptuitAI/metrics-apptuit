@@ -16,6 +16,7 @@
 
 package ai.apptuit.metrics.dropwizard;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyCollectionOf;
 import static org.mockito.Mockito.doAnswer;
 import static org.powermock.api.mockito.PowerMockito.mock;
@@ -48,7 +49,7 @@ public class MockApptuitPutClient extends BaseMockClient {
       Object[] args = invocation.getArguments();
       getInstance().notifyListeners(getDataPoints(args));
       return null;
-    }).when(mockPutClient).put(anyCollectionOf(DataPoint.class));
+    }).when(mockPutClient).put(anyCollectionOf(DataPoint.class), any(DataPoint.Sanitizer.class));
 
   }
 

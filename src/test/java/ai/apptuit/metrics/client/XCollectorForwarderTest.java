@@ -94,8 +94,8 @@ public class XCollectorForwarderTest {
     ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
 
     XCollectorForwarder forwarder = new XCollectorForwarder(globalTags,
-            new InetSocketAddress("127.0.0.1", UDP_PORT), DataPoint.Sanitization.NON);
-    forwarder.forward(dataPoints);
+            new InetSocketAddress("127.0.0.1", UDP_PORT));
+    forwarder.forward(dataPoints, DataPoint.Sanitizer.NO_OP_SANITZER);
 
     await().atMost(5, TimeUnit.SECONDS).until(() -> mockServer.countReceivedDPs() == numDataPoints);
 

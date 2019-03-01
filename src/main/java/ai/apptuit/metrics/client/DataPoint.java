@@ -31,9 +31,6 @@ import java.util.Map.Entry;
  * @author Rajiv Shivane
  */
 public class DataPoint {
-  public enum Sanitization {
-    NON, APPTUIT, PROMETHEUS
-  }
 
   private final String metric;
   private final long timestamp;
@@ -76,14 +73,14 @@ public class DataPoint {
   @Override
   public String toString() {
     StringWriter out = new StringWriter();
-    toTextPlain(new PrintWriter(out), null, Sanitization.NON);
+    toTextPlain(new PrintWriter(out), null, Sanitizer.NO_OP_SANITZER);
     return out.toString();
   }
 
-  public void toJson(PrintStream ps, Map<String, String> globalTags, Sanitization sanitize) {
+  public void toJson(PrintStream ps, Map<String, String> globalTags, Sanitizer sanitizer) {
     ps.append("{");
     {
-      ps.append("\n\"metric\":\"").append(sanitizer(getMetric(), sanitize)).append("\",")
+      ps.append("\n\"metric\":\"").append(sanitizer.sanitizer(getMetric())).append("\",")
               .append("\n\"timestamp\":").append(Long.toString(getTimestamp())).append(",")
               .append("\n\"value\":").append(String.valueOf(getValue()));
       ps.append(",\n\"tags\": {");
@@ -95,7 +92,7 @@ public class DataPoint {
       Iterator<Entry<String, String>> iterator = tagsToMarshall.entrySet().iterator();
       while (iterator.hasNext()) {
         Entry<String, String> tag = iterator.next();
-        ps.append("\n\"").append(sanitizer(tag.getKey(), sanitize)).append("\":\"")
+        ps.append("\n\"").append(sanitizer.sanitizer(tag.getKey())).append("\":\"")
                 .append(tag.getValue()).append("\"");
         if (iterator.hasNext()) {
           ps.append(",");
@@ -106,10 +103,10 @@ public class DataPoint {
     ps.append("}");
   }
 
-  public void toTextLine(OutputStream out, Map<String, String> globalTags, Sanitization sanitize) {
+  public void toTextLine(OutputStream out, Map<String, String> globalTags, Sanitizer sanitizer) {
     try {
       PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, "UTF-8"));
-      toTextPlain(writer, globalTags, sanitize);
+      toTextPlain(writer, globalTags, sanitizer);
       writer.append('\n');
       writer.flush();
     } catch (UnsupportedEncodingException e) {
@@ -117,23 +114,8 @@ public class DataPoint {
     }
   }
 
-  private String sanitizer(String unSanitizedString, Sanitization sanitization) {
-    if (sanitization == Sanitization.PROMETHEUS) {
-      unSanitizedString = ((Character.isDigit(unSanitizedString.charAt(0)) ? "_" : "")
-              + unSanitizedString).replaceAll("[^a-zA-Z0-9_]", "_")
-              .replaceAll("[_]+", "_");
-      return unSanitizedString;
-    } else if (sanitization == Sanitization.APPTUIT) {
-      unSanitizedString = unSanitizedString.replaceAll("[^\\p{L}\\-./_0-9]+", "_")
-              .replaceAll("[_]+", "_");
-      return unSanitizedString;
-    } else {
-      return unSanitizedString;
-    }
-  }
-
-  private void toTextPlain(PrintWriter ps, Map<String, String> globalTags, Sanitization sanitize) {
-    ps.append(sanitizer(getMetric(), sanitize)).append(" ")
+  private void toTextPlain(PrintWriter ps, Map<String, String> globalTags, Sanitizer sanitizer) {
+    ps.append(sanitizer.sanitizer(getMetric())).append(" ")
             .append(Long.toString(getTimestamp())).append(" ")
             .append(String.valueOf(getValue()));
 
@@ -144,7 +126,7 @@ public class DataPoint {
       tagsToMarshall = t;
     }
     tagsToMarshall.forEach((key, val) -> ps.append(" ")
-            .append(sanitizer(key, sanitize)).append("=").append(val));
+            .append(sanitizer.sanitizer(key)).append("=").append(val));
   }
 
   @Override
@@ -171,5 +153,46 @@ public class DataPoint {
     result = 31 * result + value.hashCode();
     result = 31 * result + tags.hashCode();
     return result;
+  }
+
+  public interface Sanitizer {
+
+    Sanitizer PROMETHEUS_SANITZER = new PrometheusSanitizer();
+    Sanitizer APPTUIT_SANITZER = new ApptuitSanitizer();
+    Sanitizer NO_OP_SANITZER = new NoOpSanitizer();
+
+    String sanitizer(String unSanitizedString);
+
+    class PrometheusSanitizer implements Sanitizer {
+      private PrometheusSanitizer() {
+      }
+
+      public String sanitizer(String unSanitizedString) {
+        unSanitizedString = ((Character.isDigit(unSanitizedString.charAt(0)) ? "_" : "")
+                + unSanitizedString).replaceAll("[^a-zA-Z0-9_]", "_")
+                .replaceAll("[_]+", "_");
+        return unSanitizedString;
+      }
+    }
+
+    class ApptuitSanitizer implements Sanitizer {
+      private ApptuitSanitizer() {
+      }
+
+      public String sanitizer(String unSanitizedString) {
+        unSanitizedString = unSanitizedString.replaceAll("[^\\p{L}\\-./_0-9]+", "_")
+                .replaceAll("[_]+", "_");
+        return unSanitizedString;
+      }
+    }
+
+    class NoOpSanitizer implements Sanitizer {
+      private NoOpSanitizer() {
+      }
+
+      public String sanitizer(String unSanitizedString) {
+        return unSanitizedString;
+      }
+    }
   }
 }
