@@ -44,7 +44,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
  */
 @PrepareForTest({ApptuitReporter.class})
 @PowerMockIgnore({"org.jboss.byteman.*", "javax.net.ssl.*",
-    "com.sun.management.*", "javax.management.*"})
+        "com.sun.management.*", "javax.management.*"})
 @RunWith(PowerMockRunner.class)
 public class ApptuitReporterTest {
 
@@ -65,13 +65,13 @@ public class ApptuitReporterTest {
   @Test
   public void testCounterPut() throws Exception {
     testCounter(ReportingMode.API_PUT,
-        "testCounterPut." + UUID.randomUUID().toString());
+            "testCounterPut." + UUID.randomUUID().toString());
   }
 
   @Test
   public void testCounterXCollector() throws Exception {
     testCounter(ReportingMode.XCOLLECTOR,
-        "testCounterXCollector." + UUID.randomUUID().toString());
+            "testCounterXCollector." + UUID.randomUUID().toString());
   }
 
   private void testCounter(ReportingMode reportingMode, String metricName) throws Exception {
@@ -101,13 +101,13 @@ public class ApptuitReporterTest {
   @Test
   public void testGaugeDoublePut() throws Exception {
     testGaugeDouble(ReportingMode.API_PUT,
-        "testGaugeDoublePut." + UUID.randomUUID().toString());
+            "testGaugeDoublePut." + UUID.randomUUID().toString());
   }
 
   @Test
   public void testGaugeDoubleXCollector() throws Exception {
     testGaugeDouble(ReportingMode.XCOLLECTOR,
-        "testGaugeDoubleXCollector." + UUID.randomUUID().toString());
+            "testGaugeDoubleXCollector." + UUID.randomUUID().toString());
   }
 
   private void testGaugeDouble(ReportingMode reportingMode, String metricName) throws Exception {
@@ -119,17 +119,17 @@ public class ApptuitReporterTest {
   @Test
   public void testGaugeBigDecimalPut() throws Exception {
     testGaugeBigDecimal(ReportingMode.API_PUT,
-        "testGaugeBigDecimalPut." + UUID.randomUUID().toString());
+            "testGaugeBigDecimalPut." + UUID.randomUUID().toString());
   }
 
   @Test
   public void testGaugeBigDecimalXCollector() throws Exception {
     testGaugeBigDecimal(ReportingMode.XCOLLECTOR,
-        "testGaugeBigDecimalXCollector." + UUID.randomUUID().toString());
+            "testGaugeBigDecimalXCollector." + UUID.randomUUID().toString());
   }
 
   private void testGaugeBigDecimal(ReportingMode reportingMode, String metricName)
-      throws Exception {
+          throws Exception {
     BigDecimal expectedValue = new BigDecimal(2);
     testGauge(reportingMode, metricName, expectedValue);
   }
@@ -138,17 +138,17 @@ public class ApptuitReporterTest {
   @Test
   public void testGaugeBigIntegerPut() throws Exception {
     testGaugeBigInteger(ReportingMode.API_PUT,
-        "testGaugeBigIntegerPut." + UUID.randomUUID().toString());
+            "testGaugeBigIntegerPut." + UUID.randomUUID().toString());
   }
 
   @Test
   public void testGaugeBigIntegerXCollector() throws Exception {
     testGaugeBigInteger(ReportingMode.XCOLLECTOR,
-        "testGaugeBigIntegerXCollector." + UUID.randomUUID().toString());
+            "testGaugeBigIntegerXCollector." + UUID.randomUUID().toString());
   }
 
   private void testGaugeBigInteger(ReportingMode reportingMode, String metricName)
-      throws Exception {
+          throws Exception {
     BigInteger expectedValue = new BigInteger("2");
     testGauge(reportingMode, metricName, expectedValue);
   }
@@ -157,23 +157,23 @@ public class ApptuitReporterTest {
   @Test
   public void testGaugeIntegerPut() throws Exception {
     testGaugeInteger(ReportingMode.API_PUT,
-        "testGaugeIntegerPut." + UUID.randomUUID().toString());
+            "testGaugeIntegerPut." + UUID.randomUUID().toString());
   }
 
   @Test
   public void testGaugeIntegerXCollector() throws Exception {
     testGaugeInteger(ReportingMode.XCOLLECTOR,
-        "testGaugeIntegerXCollector." + UUID.randomUUID().toString());
+            "testGaugeIntegerXCollector." + UUID.randomUUID().toString());
   }
 
   private void testGaugeInteger(ReportingMode reportingMode, String metricName)
-      throws Exception {
+          throws Exception {
     Integer expectedValue = new Integer("2");
     testGauge(reportingMode, metricName, expectedValue);
   }
 
   private void testGauge(ReportingMode reportingMode, String metricName, Number expectedValue)
-      throws Exception {
+          throws Exception {
     List<DataPoint> reportedPoints = new ArrayList<>();
 
     testMetric(reportingMode, () -> {
@@ -254,11 +254,11 @@ public class ApptuitReporterTest {
   }
 
   private void testMetric(ReportingMode reportingMode, Runnable metricUpdate, DataListener listener,
-      Callable<Boolean> awaitUntil) throws Exception {
+                          Callable<Boolean> awaitUntil) throws Exception {
 
     BaseMockClient mockClient =
-        reportingMode == ReportingMode.API_PUT ? MockApptuitPutClient.getInstance()
-            : MockXCollectorForwarder.getInstance();
+            reportingMode == ReportingMode.API_PUT ? MockApptuitPutClient.getInstance()
+                    : MockXCollectorForwarder.getInstance();
 
     try (ScheduledReporter ignored = createReporter(reportingMode)) {
       mockClient.addPutListener(listener);
@@ -278,6 +278,7 @@ public class ApptuitReporterTest {
     }
 
     factory.setReportingMode(mode);
+    factory.setSanitizer(DataPoint.Sanitizer.NO_OP_SANITZER);
 
     ScheduledReporter reporter = factory.build(registry);
     reporter.start(period, TimeUnit.SECONDS);

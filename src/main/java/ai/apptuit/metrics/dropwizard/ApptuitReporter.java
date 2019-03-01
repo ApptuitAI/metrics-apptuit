@@ -65,7 +65,7 @@ public class ApptuitReporter extends ScheduledReporter {
   protected ApptuitReporter(MetricRegistry registry, MetricFilter filter, TimeUnit rateUnit,
                             TimeUnit durationUnit, Map<String, String> globalTags,
                             String key, URL apiUrl,
-                            ReportingMode reportingMode, DataPoint.Sanitization sanitization) {
+                            ReportingMode reportingMode, DataPoint.Sanitizer sanitizer) {
     super(registry, REPORTER_NAME, filter, rateUnit, durationUnit);
 
     this.buildReportTimer = registry.timer("apptuit.reporter.report.build");
@@ -84,17 +84,17 @@ public class ApptuitReporter extends ScheduledReporter {
         break;
       case SYS_OUT:
         this.dataPointsReporter = dataPoints -> {
-          dataPoints.forEach(dp -> dp.toTextLine(System.out, globalTags, sanitization));
+          dataPoints.forEach(dp -> dp.toTextLine(System.out, globalTags, sanitizer));
         };
         break;
       case XCOLLECTOR:
-        XCollectorForwarder forwarder = new XCollectorForwarder(globalTags, sanitization);
-        this.dataPointsReporter = forwarder::forward;
+        XCollectorForwarder forwarder = new XCollectorForwarder(globalTags);
+        this.dataPointsReporter = dataPoints -> forwarder.forward(dataPoints, sanitizer);
         break;
       case API_PUT:
       default:
-        ApptuitPutClient putClient = new ApptuitPutClient(key, globalTags, apiUrl, sanitization);
-        this.dataPointsReporter = putClient::put;
+        ApptuitPutClient putClient = new ApptuitPutClient(key, globalTags, apiUrl);
+        this.dataPointsReporter = dataPoints -> putClient.put(dataPoints, sanitizer);
         break;
     }
   }
@@ -156,7 +156,7 @@ public class ApptuitReporter extends ScheduledReporter {
   }
 
   public enum ReportingMode {
-    NO_OP, SYS_OUT, XCOLLECTOR, API_PUT, SANITIZE
+    NO_OP, SYS_OUT, XCOLLECTOR, API_PUT
   }
 
   public interface DataPointsReporter {
