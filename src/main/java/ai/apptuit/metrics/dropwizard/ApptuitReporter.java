@@ -61,6 +61,7 @@ public class ApptuitReporter extends ScheduledReporter {
   private final Counter pointsSentCounter;
   private final DataPointsReporter dataPointsReporter;
   private final Map<TagEncodedMetricName, Long> lastReportedCount = new HashMap<>();
+  private final ReportingMode reportingMode;
 
   protected ApptuitReporter(MetricRegistry registry, MetricFilter filter, TimeUnit rateUnit,
                             TimeUnit durationUnit, Map<String, String> globalTags,
@@ -73,11 +74,14 @@ public class ApptuitReporter extends ScheduledReporter {
     this.metricsSentCounter = registry.counter("apptuit.reporter.metrics.sent.count");
     this.pointsSentCounter = registry.counter("apptuit.reporter.points.sent.count");
 
+
     if (reportingMode == null) {
-      reportingMode = DEFAULT_REPORTING_MODE;
+      this.reportingMode = DEFAULT_REPORTING_MODE;
+    } else {
+      this.reportingMode = reportingMode;
     }
 
-    switch (reportingMode) {
+    switch (this.reportingMode) {
       case NO_OP:
         this.dataPointsReporter = dataPoints -> {
         };

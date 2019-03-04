@@ -168,10 +168,10 @@ public class DataPoint {
       }
 
       public String sanitizer(String unSanitizedString) {
-        unSanitizedString = ((Character.isDigit(unSanitizedString.charAt(0)) ? "_" : "")
+        String sanitizedString = ((Character.isDigit(unSanitizedString.charAt(0)) ? "_" : "")
                 + unSanitizedString).replaceAll("[^a-zA-Z0-9_]", "_")
                 .replaceAll("[_]+", "_");
-        return unSanitizedString;
+        return sanitizedString;
       }
     }
 
@@ -180,9 +180,9 @@ public class DataPoint {
       }
 
       public String sanitizer(String unSanitizedString) {
-        unSanitizedString = unSanitizedString.replaceAll("[^\\p{L}\\-./_0-9]+", "_")
+        String sanitizedString = unSanitizedString.replaceAll("[^\\p{L}\\-./_0-9]+", "_")
                 .replaceAll("[_]+", "_");
-        return unSanitizedString;
+        return sanitizedString;
       }
     }
 
