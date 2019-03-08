@@ -59,7 +59,7 @@ public class ApptuitReporterFactory {
 
   private ApptuitReporter.ReportingMode reportingMode;
 
-  private DataPoint.Sanitizer sanitizer = DataPoint.Sanitizer.NO_OP_SANITZER;
+  private DataPoint.Sanitizer sanitizer = DataPoint.Sanitizer.PROMETHEUS_SANITZER;
 
   public void addGlobalTag(String tag, String value) {
     globalTags.put(tag, value);
