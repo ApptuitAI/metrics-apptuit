@@ -20,11 +20,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,7 +41,7 @@ public class DataPointTest {
   @Before
   public void setUp() throws Exception {
     tagEncodedMetricName = TagEncodedMetricName.decode("proc.stat.cpu")
-        .withTags("host", "myhost", "type", "idle");
+            .withTags("host", "myhost", "type", "idle");
   }
 
   @Test
@@ -47,7 +49,7 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dp = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-        Collections.emptyMap());
+            Collections.emptyMap());
     assertNotEquals(dp, null);
   }
 
@@ -56,7 +58,7 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dp = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-        Collections.emptyMap());
+            Collections.emptyMap());
     assertNotEquals(dp, "Text");
   }
 
@@ -65,7 +67,7 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dp = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-        Collections.emptyMap());
+            Collections.emptyMap());
     assertEquals(dp, dp);
   }
 
@@ -74,9 +76,9 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dp1 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-        Collections.emptyMap());
+            Collections.emptyMap());
     DataPoint dp2 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-        Collections.emptyMap());
+            Collections.emptyMap());
     assertEquals(dp1, dp2);
     assertEquals(dp1.hashCode(), dp2.hashCode());
   }
@@ -87,9 +89,9 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dp1 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-        tagEncodedMetricName.getTags());
+            tagEncodedMetricName.getTags());
     DataPoint dp2 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-        tagEncodedMetricName.getTags());
+            tagEncodedMetricName.getTags());
     assertEquals(dp1, dp2);
     assertEquals(dp1.hashCode(), dp2.hashCode());
   }
@@ -99,9 +101,9 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dp1 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-        tagEncodedMetricName.getTags());
+            tagEncodedMetricName.getTags());
     DataPoint dp2 = new DataPoint(tagEncodedMetricName.getMetricName() + "x", epoch, value,
-        tagEncodedMetricName.getTags());
+            tagEncodedMetricName.getTags());
     assertNotEquals(dp1, dp2);
     assertNotEquals(dp1.hashCode(), dp2.hashCode());
   }
@@ -111,9 +113,9 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dp1 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-        tagEncodedMetricName.getTags());
+            tagEncodedMetricName.getTags());
     DataPoint dp2 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch + 1, value,
-        tagEncodedMetricName.getTags());
+            tagEncodedMetricName.getTags());
     assertNotEquals(dp1, dp2);
     assertNotEquals(dp1.hashCode(), dp2.hashCode());
   }
@@ -123,9 +125,9 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dp1 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-        tagEncodedMetricName.getTags());
+            tagEncodedMetricName.getTags());
     DataPoint dp2 = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value + 1,
-        tagEncodedMetricName.getTags());
+            tagEncodedMetricName.getTags());
     assertNotEquals(dp1, dp2);
     assertNotEquals(dp1.hashCode(), dp2.hashCode());
   }
@@ -153,7 +155,7 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dataPoint = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-        Collections.emptyMap());
+            Collections.emptyMap());
 
     assertEquals("proc.stat.cpu " + epoch + " " + value, dataPoint.toString());
   }
@@ -163,10 +165,10 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dataPoint = new DataPoint(tagEncodedMetricName.getMetricName(),
-        epoch, value, tagEncodedMetricName.getTags());
+            epoch, value, tagEncodedMetricName.getTags());
 
     assertEquals("proc.stat.cpu " + epoch + " " + value + " host=myhost type=idle",
-        dataPoint.toString());
+            dataPoint.toString());
   }
 
   @Test
@@ -174,10 +176,10 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dataPoint = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-        Collections.emptyMap());
+            Collections.emptyMap());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    dataPoint.toTextLine(out, null);
+    dataPoint.toTextLine(out, null, Sanitizer.NO_OP_SANITZER);
 
     assertEquals("proc.stat.cpu " + epoch + " " + value + "\n", out.toString());
   }
@@ -187,13 +189,13 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dataPoint = new DataPoint(tagEncodedMetricName.getMetricName(),
-        epoch, value, tagEncodedMetricName.getTags());
+            epoch, value, tagEncodedMetricName.getTags());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    dataPoint.toTextLine(out, null);
+    dataPoint.toTextLine(out, null, Sanitizer.NO_OP_SANITZER);
 
     assertEquals("proc.stat.cpu " + epoch + " " + value + " host=myhost type=idle\n",
-        out.toString());
+            out.toString());
   }
 
   @Test
@@ -201,13 +203,13 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dataPoint = new DataPoint(tagEncodedMetricName.getMetricName(),
-        epoch, value, Collections.emptyMap());
+            epoch, value, Collections.emptyMap());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    dataPoint.toTextLine(out, tagEncodedMetricName.getTags());
+    dataPoint.toTextLine(out, tagEncodedMetricName.getTags(), Sanitizer.NO_OP_SANITZER);
 
     assertEquals("proc.stat.cpu " + epoch + " " + value + " host=myhost type=idle\n",
-        out.toString());
+            out.toString());
   }
 
   @Test
@@ -215,10 +217,10 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dataPoint = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-        Collections.emptyMap());
+            Collections.emptyMap());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    dataPoint.toJson(new PrintStream(out), null);
+    dataPoint.toJson(new PrintStream(out), null, Sanitizer.NO_OP_SANITZER);
     String jsonTxt = out.toString();
 
     DataPoint dp = Util.jsonToDataPoint(jsonTxt);
@@ -230,10 +232,10 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dataPoint = new DataPoint(tagEncodedMetricName.getMetricName(),
-        epoch, value, tagEncodedMetricName.getTags());
+            epoch, value, tagEncodedMetricName.getTags());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    dataPoint.toJson(new PrintStream(out), null);
+    dataPoint.toJson(new PrintStream(out), null, Sanitizer.NO_OP_SANITZER);
     String jsonTxt = out.toString();
 
     DataPoint dp = Util.jsonToDataPoint(jsonTxt);
@@ -245,16 +247,99 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     long value = 1515;
     DataPoint dataPoint = new DataPoint(tagEncodedMetricName.getMetricName(),
-        epoch, value, Collections.emptyMap());
+            epoch, value, Collections.emptyMap());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    dataPoint.toJson(new PrintStream(out), tagEncodedMetricName.getTags());
+    dataPoint.toJson(new PrintStream(out), tagEncodedMetricName.getTags(), Sanitizer.NO_OP_SANITZER);
     String jsonTxt = out.toString();
 
     DataPoint dp = Util.jsonToDataPoint(jsonTxt);
     DataPoint expectedDataPoint = new DataPoint(tagEncodedMetricName.getMetricName(),
-        epoch, value, tagEncodedMetricName.getTags());
+            epoch, value, tagEncodedMetricName.getTags());
     assertEquals(expectedDataPoint, dp);
+  }
+
+  @Test
+  public void testToPromSanitization() throws Exception {
+    long epoch = System.currentTimeMillis();
+    long value = 1515;
+    tagEncodedMetricName = TagEncodedMetricName.decode("1proc.stat$cpu")
+            .withTags("3host", "2myhost", "type__4", "idle");
+    DataPoint dataPoint1 = new DataPoint(tagEncodedMetricName.getMetricName(),
+            epoch, value, Collections.emptyMap());
+
+    ByteArrayOutputStream out1 = new ByteArrayOutputStream();
+    dataPoint1.toTextLine(out1, tagEncodedMetricName.getTags(), Sanitizer.PROMETHEUS_SANITZER);
+
+    assertEquals("_1proc_stat_cpu " + epoch + " " + value + " _3host=2myhost type_4=idle\n",
+            out1.toString());
+
+    tagEncodedMetricName = TagEncodedMetricName.decode("1proc.stat_わcpu")
+            .withTags("3host", "2myhost_わ", "type__4", "idle");
+    DataPoint dataPoint2 = new DataPoint(tagEncodedMetricName.getMetricName(),
+            epoch, value, Collections.emptyMap());
+
+    ByteArrayOutputStream out2 = new ByteArrayOutputStream();
+    dataPoint2.toTextLine(out2, tagEncodedMetricName.getTags(), Sanitizer.PROMETHEUS_SANITZER);
+
+    assertEquals("_1proc_stat_cpu " + epoch + " " + value + " _3host=2myhost_わ type_4=idle\n",
+            out2.toString());
+  }
+
+  @Test
+  public void testToApptuitSanitization() throws Exception {
+    long epoch = System.currentTimeMillis();
+    long value = 1515;
+    tagEncodedMetricName = TagEncodedMetricName.decode("1proc.stat$cpu_わ")
+            .withTags("3host", "2-myhost", "type__4", "idle");
+    DataPoint dataPoint1 = new DataPoint(tagEncodedMetricName.getMetricName(),
+            epoch, value, Collections.emptyMap());
+
+    ByteArrayOutputStream out1 = new ByteArrayOutputStream();
+    dataPoint1.toTextLine(out1, tagEncodedMetricName.getTags(), Sanitizer.APPTUIT_SANITZER);
+
+    assertEquals("1proc.stat_cpu_わ " + epoch + " " + value + " 3host=2-myhost type_4=idle\n",
+            out1.toString());
+
+
+    tagEncodedMetricName = TagEncodedMetricName.decode("1proc.stat$cpu")
+            .withTags("3.host", "2-myhost", "type_/4", "idle");
+    DataPoint dataPoint2 = new DataPoint(tagEncodedMetricName.getMetricName(),
+            epoch, value, Collections.emptyMap());
+
+    ByteArrayOutputStream out2 = new ByteArrayOutputStream();
+    dataPoint2.toTextLine(out2, tagEncodedMetricName.getTags(), Sanitizer.APPTUIT_SANITZER);
+
+    assertEquals("1proc.stat_cpu " + epoch + " " + value + " 3.host=2-myhost type_/4=idle\n",
+            out2.toString());
+  }
+
+  @Test
+  public void testToNoOpSanitization() throws Exception {
+    long epoch = System.currentTimeMillis();
+    long value = 1515;
+    tagEncodedMetricName = TagEncodedMetricName.decode("1proc.stat$cpu_わ")
+            .withTags("3host", "2-myhost", "type__4", "idle");
+    DataPoint dataPoint1 = new DataPoint(tagEncodedMetricName.getMetricName(),
+            epoch, value, Collections.emptyMap());
+
+    ByteArrayOutputStream out1 = new ByteArrayOutputStream();
+    dataPoint1.toTextLine(out1, tagEncodedMetricName.getTags(), Sanitizer.NO_OP_SANITZER);
+
+    assertEquals("1proc.stat$cpu_わ " + epoch + " " + value + " 3host=2-myhost type__4=idle\n",
+            out1.toString());
+
+
+    tagEncodedMetricName = TagEncodedMetricName.decode("1proc.stat$cpu")
+            .withTags("3.host", "2-myhost", "type_/4", "idle");
+    DataPoint dataPoint2 = new DataPoint(tagEncodedMetricName.getMetricName(),
+            epoch, value, Collections.emptyMap());
+
+    ByteArrayOutputStream out2 = new ByteArrayOutputStream();
+    dataPoint2.toTextLine(out2, tagEncodedMetricName.getTags(), Sanitizer.NO_OP_SANITZER);
+
+    assertEquals("1proc.stat$cpu " + epoch + " " + value + " 3.host=2-myhost type_/4=idle\n",
+            out2.toString());
   }
 
 }

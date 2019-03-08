@@ -20,6 +20,7 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -64,7 +66,7 @@ public class XCollectorForwarderTest {
   @Before
   public void setUp() throws Exception {
     tagEncodedMetricName = TagEncodedMetricName.decode("proc.stat.cpu")
-        .withTags("type", "idle");
+            .withTags("type", "idle");
 
     globalTags = new HashMap<>();
     globalTags.put("host", "rajiv");
@@ -92,8 +94,8 @@ public class XCollectorForwarderTest {
     ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
 
     XCollectorForwarder forwarder = new XCollectorForwarder(globalTags,
-        new InetSocketAddress("127.0.0.1", UDP_PORT));
-    forwarder.forward(dataPoints);
+            new InetSocketAddress("127.0.0.1", UDP_PORT));
+    forwarder.forward(dataPoints, Sanitizer.NO_OP_SANITZER);
 
     await().atMost(5, TimeUnit.SECONDS).until(() -> mockServer.countReceivedDPs() == numDataPoints);
 
@@ -110,7 +112,7 @@ public class XCollectorForwarderTest {
       long value = 99 + i;
       long epoch = System.currentTimeMillis() / 1000 - value;
       DataPoint dataPoint = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-          tagEncodedMetricName.getTags());
+              tagEncodedMetricName.getTags());
       dataPoints.add(dataPoint);
     }
     return dataPoints;
@@ -120,7 +122,7 @@ public class XCollectorForwarderTest {
     Map<String, String> tags = new HashMap<>(dataPoint.getTags());
     tags.putAll(globalTags);
     return new DataPoint(dataPoint.getMetric(), dataPoint.getTimestamp(), dataPoint.getValue(),
-        tags);
+            tags);
   }
 
   private static class MockServer {
@@ -179,7 +181,7 @@ public class XCollectorForwarderTest {
       private DataPoint toDataPoint(String line) {
         Scanner fields = new Scanner(line).useDelimiter(" ");
         return new DataPoint(fields.next(), fields.nextLong(),
-            fields.nextLong(), getTags(fields));
+                fields.nextLong(), getTags(fields));
       }
 
       private Map<String, String> getTags(Scanner fields) {

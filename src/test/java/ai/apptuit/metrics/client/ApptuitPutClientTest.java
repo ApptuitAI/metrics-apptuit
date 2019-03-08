@@ -23,6 +23,7 @@ import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.zip.GZIPInputStream;
+
 import org.json.simple.parser.ParseException;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -75,7 +77,7 @@ public class ApptuitPutClientTest {
   @Before
   public void setUp() throws Exception {
     tagEncodedMetricName = TagEncodedMetricName.decode("proc.stat.cpu")
-        .withTags("type", "idle");
+            .withTags("type", "idle");
 
     globalTags = new HashMap<>();
     globalTags.put("host", "rajiv");
@@ -93,7 +95,7 @@ public class ApptuitPutClientTest {
   public void testEntityMarshallingNoGZIP() throws Exception {
     for (int numDataPoints = 1; numDataPoints <= 10; numDataPoints++) {
       ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
-      DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags, false);
+      DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags, Sanitizer.NO_OP_SANITZER, false);
 
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       entity.writeTo(baos);
@@ -110,7 +112,7 @@ public class ApptuitPutClientTest {
   public void testEntityMarshallingWithGZIP() throws Exception {
     for (int numDataPoints = 1; numDataPoints <= 10; numDataPoints++) {
       ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
-      DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags, true);
+      DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags, Sanitizer.NO_OP_SANITZER, true);
 
       PipedInputStream pis = new PipedInputStream();
 
@@ -144,7 +146,7 @@ public class ApptuitPutClientTest {
 
     URL apiEndPoint = httpServer.getUrl(status);
     ApptuitPutClient client = new ApptuitPutClient(MockServer.token, globalTags, apiEndPoint);
-    client.put(dataPoints);
+    client.put(dataPoints, Sanitizer.NO_OP_SANITZER);
 
     List<HttpExchange> exchanges = httpServer.getExchanges();
     List<String> requestBodies = httpServer.getRequestBodies();
@@ -172,7 +174,7 @@ public class ApptuitPutClientTest {
       long value = 99 + i;
       long epoch = System.currentTimeMillis() / 1000 - value;
       DataPoint dataPoint = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-          tagEncodedMetricName.getTags());
+              tagEncodedMetricName.getTags());
       dataPoints.add(dataPoint);
     }
     return dataPoints;
@@ -182,7 +184,7 @@ public class ApptuitPutClientTest {
     Map<String, String> tags = new HashMap<>(dataPoint.getTags());
     tags.putAll(globalTags);
     return new DataPoint(dataPoint.getMetric(), dataPoint.getTimestamp(), dataPoint.getValue(),
-        tags);
+            tags);
   }
 
   private static class MockServer {
