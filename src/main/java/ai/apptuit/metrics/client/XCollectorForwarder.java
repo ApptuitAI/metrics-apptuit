@@ -55,7 +55,7 @@ public class XCollectorForwarder {
     this.xcollectorAddress = xcollectorAddress;
   }
 
-  public void forward(Collection<DataPoint> dataPoints, DataPoint.Sanitizer sanitizer) {
+  public void forward(Collection<DataPoint> dataPoints, Sanitizer sanitizer) {
 
     if (socket == null) {
       try {

@@ -22,6 +22,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.powermock.api.mockito.PowerMockito.mock;
 
 import ai.apptuit.metrics.client.DataPoint;
+import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.client.XCollectorForwarder;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
@@ -50,7 +51,7 @@ public class MockXCollectorForwarder extends BaseMockClient {
       Object[] args = invocation.getArguments();
       getInstance().notifyListeners(getDataPoints(args));
       return null;
-    }).when(forwarder).forward(anyCollectionOf(DataPoint.class), any(DataPoint.Sanitizer.class));
+    }).when(forwarder).forward(anyCollectionOf(DataPoint.class), any(Sanitizer.class));
   }
 
   @SuppressWarnings("unchecked")

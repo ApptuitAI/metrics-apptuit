@@ -179,7 +179,7 @@ public class DataPointTest {
             Collections.emptyMap());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    dataPoint.toTextLine(out, null, DataPoint.Sanitizer.NO_OP_SANITZER);
+    dataPoint.toTextLine(out, null, Sanitizer.NO_OP_SANITZER);
 
     assertEquals("proc.stat.cpu " + epoch + " " + value + "\n", out.toString());
   }
@@ -192,7 +192,7 @@ public class DataPointTest {
             epoch, value, tagEncodedMetricName.getTags());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    dataPoint.toTextLine(out, null, DataPoint.Sanitizer.NO_OP_SANITZER);
+    dataPoint.toTextLine(out, null, Sanitizer.NO_OP_SANITZER);
 
     assertEquals("proc.stat.cpu " + epoch + " " + value + " host=myhost type=idle\n",
             out.toString());
@@ -206,7 +206,7 @@ public class DataPointTest {
             epoch, value, Collections.emptyMap());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    dataPoint.toTextLine(out, tagEncodedMetricName.getTags(), DataPoint.Sanitizer.NO_OP_SANITZER);
+    dataPoint.toTextLine(out, tagEncodedMetricName.getTags(), Sanitizer.NO_OP_SANITZER);
 
     assertEquals("proc.stat.cpu " + epoch + " " + value + " host=myhost type=idle\n",
             out.toString());
@@ -220,7 +220,7 @@ public class DataPointTest {
             Collections.emptyMap());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    dataPoint.toJson(new PrintStream(out), null, DataPoint.Sanitizer.NO_OP_SANITZER);
+    dataPoint.toJson(new PrintStream(out), null, Sanitizer.NO_OP_SANITZER);
     String jsonTxt = out.toString();
 
     DataPoint dp = Util.jsonToDataPoint(jsonTxt);
@@ -235,7 +235,7 @@ public class DataPointTest {
             epoch, value, tagEncodedMetricName.getTags());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    dataPoint.toJson(new PrintStream(out), null, DataPoint.Sanitizer.NO_OP_SANITZER);
+    dataPoint.toJson(new PrintStream(out), null, Sanitizer.NO_OP_SANITZER);
     String jsonTxt = out.toString();
 
     DataPoint dp = Util.jsonToDataPoint(jsonTxt);
@@ -250,7 +250,7 @@ public class DataPointTest {
             epoch, value, Collections.emptyMap());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    dataPoint.toJson(new PrintStream(out), tagEncodedMetricName.getTags(), DataPoint.Sanitizer.NO_OP_SANITZER);
+    dataPoint.toJson(new PrintStream(out), tagEncodedMetricName.getTags(), Sanitizer.NO_OP_SANITZER);
     String jsonTxt = out.toString();
 
     DataPoint dp = Util.jsonToDataPoint(jsonTxt);
@@ -269,7 +269,7 @@ public class DataPointTest {
             epoch, value, Collections.emptyMap());
 
     ByteArrayOutputStream out1 = new ByteArrayOutputStream();
-    dataPoint1.toTextLine(out1, tagEncodedMetricName.getTags(), DataPoint.Sanitizer.PROMETHEUS_SANITZER);
+    dataPoint1.toTextLine(out1, tagEncodedMetricName.getTags(), Sanitizer.PROMETHEUS_SANITZER);
 
     assertEquals("_1proc_stat_cpu " + epoch + " " + value + " _3host=2myhost type_4=idle\n",
             out1.toString());
@@ -280,7 +280,7 @@ public class DataPointTest {
             epoch, value, Collections.emptyMap());
 
     ByteArrayOutputStream out2 = new ByteArrayOutputStream();
-    dataPoint2.toTextLine(out2, tagEncodedMetricName.getTags(), DataPoint.Sanitizer.PROMETHEUS_SANITZER);
+    dataPoint2.toTextLine(out2, tagEncodedMetricName.getTags(), Sanitizer.PROMETHEUS_SANITZER);
 
     assertEquals("_1proc_stat_cpu " + epoch + " " + value + " _3host=2myhost_わ type_4=idle\n",
             out2.toString());
@@ -296,7 +296,7 @@ public class DataPointTest {
             epoch, value, Collections.emptyMap());
 
     ByteArrayOutputStream out1 = new ByteArrayOutputStream();
-    dataPoint1.toTextLine(out1, tagEncodedMetricName.getTags(), DataPoint.Sanitizer.APPTUIT_SANITZER);
+    dataPoint1.toTextLine(out1, tagEncodedMetricName.getTags(), Sanitizer.APPTUIT_SANITZER);
 
     assertEquals("1proc.stat_cpu_わ " + epoch + " " + value + " 3host=2-myhost type_4=idle\n",
             out1.toString());
@@ -308,7 +308,7 @@ public class DataPointTest {
             epoch, value, Collections.emptyMap());
 
     ByteArrayOutputStream out2 = new ByteArrayOutputStream();
-    dataPoint2.toTextLine(out2, tagEncodedMetricName.getTags(), DataPoint.Sanitizer.APPTUIT_SANITZER);
+    dataPoint2.toTextLine(out2, tagEncodedMetricName.getTags(), Sanitizer.APPTUIT_SANITZER);
 
     assertEquals("1proc.stat_cpu " + epoch + " " + value + " 3.host=2-myhost type_/4=idle\n",
             out2.toString());
@@ -324,7 +324,7 @@ public class DataPointTest {
             epoch, value, Collections.emptyMap());
 
     ByteArrayOutputStream out1 = new ByteArrayOutputStream();
-    dataPoint1.toTextLine(out1, tagEncodedMetricName.getTags(), DataPoint.Sanitizer.NO_OP_SANITZER);
+    dataPoint1.toTextLine(out1, tagEncodedMetricName.getTags(), Sanitizer.NO_OP_SANITZER);
 
     assertEquals("1proc.stat$cpu_わ " + epoch + " " + value + " 3host=2-myhost type__4=idle\n",
             out1.toString());
@@ -336,7 +336,7 @@ public class DataPointTest {
             epoch, value, Collections.emptyMap());
 
     ByteArrayOutputStream out2 = new ByteArrayOutputStream();
-    dataPoint2.toTextLine(out2, tagEncodedMetricName.getTags(), DataPoint.Sanitizer.NO_OP_SANITZER);
+    dataPoint2.toTextLine(out2, tagEncodedMetricName.getTags(), Sanitizer.NO_OP_SANITZER);
 
     assertEquals("1proc.stat$cpu " + epoch + " " + value + " 3.host=2-myhost type_/4=idle\n",
             out2.toString());

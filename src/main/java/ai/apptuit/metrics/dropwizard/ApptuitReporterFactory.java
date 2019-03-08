@@ -16,7 +16,7 @@
 
 package ai.apptuit.metrics.dropwizard;
 
-import ai.apptuit.metrics.client.DataPoint;
+import ai.apptuit.metrics.client.Sanitizer;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
@@ -59,7 +59,7 @@ public class ApptuitReporterFactory {
 
   private ApptuitReporter.ReportingMode reportingMode;
 
-  private DataPoint.Sanitizer sanitizer = DataPoint.Sanitizer.PROMETHEUS_SANITZER;
+  private Sanitizer sanitizer = Sanitizer.PROMETHEUS_SANITZER;
 
   public void addGlobalTag(String tag, String value) {
     globalTags.put(tag, value);
@@ -117,11 +117,11 @@ public class ApptuitReporterFactory {
     this.useRegexFilters = useRegexFilters;
   }
 
-  public void setSanitizer(DataPoint.Sanitizer sanitizer) {
+  public void setSanitizer(Sanitizer sanitizer) {
     this.sanitizer = sanitizer;
   }
 
-  public DataPoint.Sanitizer getSanitizer() {
+  public Sanitizer getSanitizer() {
     return this.sanitizer;
   }
 

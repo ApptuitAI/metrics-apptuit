@@ -155,44 +155,4 @@ public class DataPoint {
     return result;
   }
 
-  public interface Sanitizer {
-
-    Sanitizer PROMETHEUS_SANITZER = new PrometheusSanitizer();
-    Sanitizer APPTUIT_SANITZER = new ApptuitSanitizer();
-    Sanitizer NO_OP_SANITZER = new NoOpSanitizer();
-
-    String sanitizer(String unSanitizedString);
-
-    class PrometheusSanitizer implements Sanitizer {
-      private PrometheusSanitizer() {
-      }
-
-      public String sanitizer(String unSanitizedString) {
-        String sanitizedString = ((Character.isDigit(unSanitizedString.charAt(0)) ? "_" : "")
-                + unSanitizedString).replaceAll("[^a-zA-Z0-9_]", "_")
-                .replaceAll("[_]+", "_");
-        return sanitizedString;
-      }
-    }
-
-    class ApptuitSanitizer implements Sanitizer {
-      private ApptuitSanitizer() {
-      }
-
-      public String sanitizer(String unSanitizedString) {
-        String sanitizedString = unSanitizedString.replaceAll("[^\\p{L}\\-./_0-9]+", "_")
-                .replaceAll("[_]+", "_");
-        return sanitizedString;
-      }
-    }
-
-    class NoOpSanitizer implements Sanitizer {
-      private NoOpSanitizer() {
-      }
-
-      public String sanitizer(String unSanitizedString) {
-        return unSanitizedString;
-      }
-    }
-  }
 }

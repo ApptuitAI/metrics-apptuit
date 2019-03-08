@@ -18,6 +18,7 @@ package ai.apptuit.metrics.dropwizard;
 
 import ai.apptuit.metrics.client.ApptuitPutClient;
 import ai.apptuit.metrics.client.DataPoint;
+import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.client.XCollectorForwarder;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Counting;
@@ -66,7 +67,7 @@ public class ApptuitReporter extends ScheduledReporter {
   protected ApptuitReporter(MetricRegistry registry, MetricFilter filter, TimeUnit rateUnit,
                             TimeUnit durationUnit, Map<String, String> globalTags,
                             String key, URL apiUrl,
-                            ReportingMode reportingMode, DataPoint.Sanitizer sanitizer) {
+                            ReportingMode reportingMode, Sanitizer sanitizer) {
     super(registry, REPORTER_NAME, filter, rateUnit, durationUnit);
 
     this.buildReportTimer = registry.timer("apptuit.reporter.report.build");

@@ -20,6 +20,7 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.client.DataPoint;
+import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.dropwizard.BaseMockClient.DataListener;
 import com.codahale.metrics.*;
@@ -278,7 +279,7 @@ public class ApptuitReporterTest {
     }
 
     factory.setReportingMode(mode);
-    factory.setSanitizer(DataPoint.Sanitizer.NO_OP_SANITZER);
+    factory.setSanitizer(Sanitizer.NO_OP_SANITZER);
 
     ScheduledReporter reporter = factory.build(registry);
     reporter.start(period, TimeUnit.SECONDS);

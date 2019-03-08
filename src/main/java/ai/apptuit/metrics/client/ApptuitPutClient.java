@@ -73,7 +73,7 @@ public class ApptuitPutClient {
     this.apiEndPoint = (apiEndPoint != null) ? apiEndPoint : DEFAULT_PUT_API_URI;
   }
 
-  public void put(Collection<DataPoint> dataPoints, DataPoint.Sanitizer sanitizer) {
+  public void put(Collection<DataPoint> dataPoints, Sanitizer sanitizer) {
 
     DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags, sanitizer);
 
@@ -158,17 +158,17 @@ public class ApptuitPutClient {
     private final Collection<DataPoint> dataPoints;
     private final Map<String, String> globalTags;
     private final boolean doZip;
-    private final DataPoint.Sanitizer sanitizer;
+    private final Sanitizer sanitizer;
 
     public DatapointsHttpEntity(Collection<DataPoint> dataPoints,
                                 Map<String, String> globalTags,
-                                DataPoint.Sanitizer sanitizer) {
+                                Sanitizer sanitizer) {
       this(dataPoints, globalTags, sanitizer, GZIP);
     }
 
     public DatapointsHttpEntity(Collection<DataPoint> dataPoints,
                                 Map<String, String> globalTags,
-                                DataPoint.Sanitizer sanitizer, boolean doZip) {
+                                Sanitizer sanitizer, boolean doZip) {
       this.dataPoints = dataPoints;
       this.globalTags = globalTags;
       this.doZip = doZip;
