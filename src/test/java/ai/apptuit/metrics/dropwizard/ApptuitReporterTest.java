@@ -16,22 +16,12 @@
 
 package ai.apptuit.metrics.dropwizard;
 
-import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertEquals;
-
 import ai.apptuit.metrics.client.DataPoint;
 import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.dropwizard.BaseMockClient.DataListener;
-import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-
+import com.codahale.metrics.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,6 +29,15 @@ import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
+import static org.awaitility.Awaitility.await;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Rajiv Shivane

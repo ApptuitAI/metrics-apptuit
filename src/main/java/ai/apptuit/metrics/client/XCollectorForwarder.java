@@ -18,11 +18,7 @@ package ai.apptuit.metrics.client;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.net.SocketException;
+import java.net.*;
 import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Level;

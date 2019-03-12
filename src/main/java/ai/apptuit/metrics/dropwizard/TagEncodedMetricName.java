@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 public class TagEncodedMetricName implements Comparable<TagEncodedMetricName> {
 
   private static final Pattern TAG_ENCODED_METRICNAME_PATTERN = Pattern
-      .compile("([\\w\\.-]+)\\[([\\w\\W]+)\\]");
+          .compile("([\\w\\.-]+)\\[([\\w\\W]+)\\]");
   private static final char TAG_VALUE_SEPARATOR = ':';
   private final Map<String, String> tags;
   private final String metricName;
