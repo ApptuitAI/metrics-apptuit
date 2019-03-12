@@ -263,7 +263,7 @@ public class ApptuitReporterTest {
     try (ScheduledReporter ignored = createReporter(reportingMode)) {
       mockClient.addPutListener(listener);
       metricUpdate.run();
-      await().atMost(period * 1500, TimeUnit.SECONDS).until(awaitUntil);
+      await().atMost(period * 15, TimeUnit.SECONDS).until(awaitUntil);
       mockClient.removePutListener(listener);
     }
   }

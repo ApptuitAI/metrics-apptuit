@@ -106,7 +106,7 @@ public class TagEncodedMetricNameTest {
   @Test
   public void testEqualsMultipleTags() throws Exception {
     TagEncodedMetricName m1 = encodedMetricName
-            .submetric("pqr").withTags("k1", "v1", "k2", "v2");
+        .submetric("pqr").withTags("k1", "v1", "k2", "v2");
     TagEncodedMetricName m2 = TagEncodedMetricName.decode("asdf.pqr[k1:v1,k2:v2]");
     assertEquals(m1, m2);
     assertEquals(m1.hashCode(), m2.hashCode());

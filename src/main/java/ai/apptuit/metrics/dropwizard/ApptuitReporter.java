@@ -192,7 +192,7 @@ public class ApptuitReporter extends ScheduledReporter {
 
     private void collectHistogram(String name, Histogram histogram) {
       TagEncodedMetricName rootMetric = TagEncodedMetricName.decode(name);
-      collectCounting(rootMetric.submetric("count"), histogram, () -> reportSnapshot(rootMetric, histogram));
+      collectCounting(rootMetric.submetric("count"), histogram, () -> reportSnapshot(rootMetric, histogram.getSnapshot()));
     }
 
     private void collectMeter(String name, Meter meter) {
@@ -203,7 +203,7 @@ public class ApptuitReporter extends ScheduledReporter {
     private void collectTimer(String name, final Timer timer) {
       TagEncodedMetricName rootMetric = TagEncodedMetricName.decode(name);
       collectCounting(rootMetric.submetric("count"), timer, () -> {
-        reportSnapshot(rootMetric.submetric("duration"), timer);
+        reportSnapshot(rootMetric.submetric("duration"), timer.getSnapshot());
         reportMetered(rootMetric, timer)
         ;
       });
@@ -220,8 +220,7 @@ public class ApptuitReporter extends ScheduledReporter {
       }
     }
 
-    private void reportSnapshot(TagEncodedMetricName metric, Sampling samplingObj) {
-      Snapshot snapshot = samplingObj.getSnapshot();
+    private void reportSnapshot(TagEncodedMetricName metric, Snapshot snapshot) {
       addDataPoint(metric.submetric("min"), convertDuration(snapshot.getMin()));
       addDataPoint(metric.submetric("max"), convertDuration(snapshot.getMax()));
       addDataPoint(metric.submetric("mean"), convertDuration(snapshot.getMean()));
