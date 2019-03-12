@@ -239,12 +239,12 @@ public class ApptuitReporterTest {
     expectedMetrics.add(duration.submetric("max"));
     expectedMetrics.add(duration.submetric("mean"));
     expectedMetrics.add(duration.submetric("stddev"));
-    expectedMetrics.add(duration.withTags("quantile", "p50"));
-    expectedMetrics.add(duration.withTags("quantile", "p75"));
-    expectedMetrics.add(duration.withTags("quantile", "p95"));
-    expectedMetrics.add(duration.withTags("quantile", "p98"));
-    expectedMetrics.add(duration.withTags("quantile", "p99"));
-    expectedMetrics.add(duration.withTags("quantile", "p999"));
+    expectedMetrics.add(duration.withTags("quantile", "0.5"));
+    expectedMetrics.add(duration.withTags("quantile", "0.75"));
+    expectedMetrics.add(duration.withTags("quantile", "0.95"));
+    expectedMetrics.add(duration.withTags("quantile", "0.98"));
+    expectedMetrics.add(duration.withTags("quantile", "0.99"));
+    expectedMetrics.add(duration.withTags("quantile", "0.999"));
 
     TagEncodedMetricName rate = root.submetric("rate");
     expectedMetrics.add(rate.withTags("window", "1m"));
@@ -264,7 +264,7 @@ public class ApptuitReporterTest {
     try (ScheduledReporter ignored = createReporter(reportingMode)) {
       mockClient.addPutListener(listener);
       metricUpdate.run();
-      await().atMost(period * 5, TimeUnit.SECONDS).until(awaitUntil);
+      await().atMost(period * 1500, TimeUnit.SECONDS).until(awaitUntil);
       mockClient.removePutListener(listener);
     }
   }
