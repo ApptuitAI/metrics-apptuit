@@ -191,33 +191,29 @@ public class ApptuitReporter extends ScheduledReporter {
 
     private void collectHistogram(String name, Histogram histogram) {
       TagEncodedMetricName rootMetric = TagEncodedMetricName.decode(name);
-      collectCounting(rootMetric, histogram, () -> reportSnapshot(rootMetric, histogram));
+      collectCounting(rootMetric.submetric("count"), histogram, () -> reportSnapshot(rootMetric, histogram));
     }
 
     private void collectMeter(String name, Meter meter) {
       TagEncodedMetricName rootMetric = TagEncodedMetricName.decode(name);
-      collectCounting(rootMetric, meter, () -> reportMetered(rootMetric, meter));
+      collectCounting(rootMetric.submetric("total"), meter, () -> reportMetered(rootMetric, meter));
     }
 
     private void collectTimer(String name, final Timer timer) {
       TagEncodedMetricName rootMetric = TagEncodedMetricName.decode(name);
-      collectCounting(rootMetric, timer, () -> {
-        reportSnapshot(rootMetric, timer);
+      collectCounting(rootMetric.submetric("count"), timer, () -> {
+        reportSnapshot(rootMetric.submetric("duration"), timer);
         reportMetered(rootMetric, timer)
         ;
       });
     }
 
 
-    private <T extends Counting> void collectCounting(TagEncodedMetricName rootMetric, T metric,
+    private <T extends Counting> void collectCounting(TagEncodedMetricName countMetric, T metric,
                                                       Runnable reportSubmetrics) {
       long currentCount = metric.getCount();
-      if (metric.getClass() == Meter.class) {
-        addDataPoint(rootMetric.submetric("total"), currentCount);
-      } else {
-        addDataPoint(rootMetric.submetric("count"), currentCount);
-      }
-      Long lastCount = lastReportedCount.put(rootMetric, currentCount);
+      addDataPoint(countMetric, currentCount);
+      Long lastCount = lastReportedCount.put(countMetric, currentCount);
       if (lastCount == null || lastCount != currentCount) {
         reportSubmetrics.run();
       }
@@ -225,26 +221,16 @@ public class ApptuitReporter extends ScheduledReporter {
 
     private void reportSnapshot(TagEncodedMetricName metric, Sampling samplingObj) {
       Snapshot snapshot = samplingObj.getSnapshot();
-      String additionalSubMetric = "";
-      if (samplingObj.getClass() == Timer.class) {
-        additionalSubMetric = "duration";
-      }
-      addDataPoint(metric.submetric(additionalSubMetric).submetric("min"), convertDuration(snapshot.getMin()));
-      addDataPoint(metric.submetric(additionalSubMetric).submetric("max"), convertDuration(snapshot.getMax()));
-      addDataPoint(metric.submetric(additionalSubMetric).submetric("mean"), convertDuration(snapshot.getMean()));
-      addDataPoint(metric.submetric(additionalSubMetric).submetric("stddev"), convertDuration(snapshot.getStdDev()));
-      addDataPoint(metric.submetric(additionalSubMetric).withTags("quantile", "0.5"),
-              convertDuration(snapshot.getMedian()));
-      addDataPoint(metric.submetric(additionalSubMetric).withTags("quantile", "0.75"),
-              convertDuration(snapshot.get75thPercentile()));
-      addDataPoint(metric.submetric(additionalSubMetric).withTags("quantile", "0.95"),
-              convertDuration(snapshot.get95thPercentile()));
-      addDataPoint(metric.submetric(additionalSubMetric).withTags("quantile", "0.98"),
-              convertDuration(snapshot.get98thPercentile()));
-      addDataPoint(metric.submetric(additionalSubMetric).withTags("quantile", "0.99"),
-              convertDuration(snapshot.get99thPercentile()));
-      addDataPoint(metric.submetric(additionalSubMetric).withTags("quantile", "0.999"),
-              convertDuration(snapshot.get999thPercentile()));
+      addDataPoint(metric.submetric("min"), convertDuration(snapshot.getMin()));
+      addDataPoint(metric.submetric("max"), convertDuration(snapshot.getMax()));
+      addDataPoint(metric.submetric("mean"), convertDuration(snapshot.getMean()));
+      addDataPoint(metric.submetric("stddev"), convertDuration(snapshot.getStdDev()));
+      addDataPoint(metric.withTags("quantile", "0.5"), convertDuration(snapshot.getMedian()));
+      addDataPoint(metric.withTags("quantile", "0.75"), convertDuration(snapshot.get75thPercentile()));
+      addDataPoint(metric.withTags("quantile", "0.95"), convertDuration(snapshot.get95thPercentile()));
+      addDataPoint(metric.withTags("quantile", "0.98"), convertDuration(snapshot.get98thPercentile()));
+      addDataPoint(metric.withTags("quantile", "0.99"), convertDuration(snapshot.get99thPercentile()));
+      addDataPoint(metric.withTags("quantile", "0.999"), convertDuration(snapshot.get999thPercentile()));
     }
 
     private void reportMetered(TagEncodedMetricName metric, Metered meter) {
