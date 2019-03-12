@@ -16,22 +16,12 @@
 
 package ai.apptuit.metrics.dropwizard;
 
-import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertEquals;
-
 import ai.apptuit.metrics.client.DataPoint;
 import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.dropwizard.BaseMockClient.DataListener;
-import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-
+import com.codahale.metrics.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,6 +29,15 @@ import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
+import static org.awaitility.Awaitility.await;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Rajiv Shivane
@@ -239,12 +238,12 @@ public class ApptuitReporterTest {
     expectedMetrics.add(duration.submetric("max"));
     expectedMetrics.add(duration.submetric("mean"));
     expectedMetrics.add(duration.submetric("stddev"));
-    expectedMetrics.add(duration.withTags("quantile", "p50"));
-    expectedMetrics.add(duration.withTags("quantile", "p75"));
-    expectedMetrics.add(duration.withTags("quantile", "p95"));
-    expectedMetrics.add(duration.withTags("quantile", "p98"));
-    expectedMetrics.add(duration.withTags("quantile", "p99"));
-    expectedMetrics.add(duration.withTags("quantile", "p999"));
+    expectedMetrics.add(duration.withTags("quantile", "0.5"));
+    expectedMetrics.add(duration.withTags("quantile", "0.75"));
+    expectedMetrics.add(duration.withTags("quantile", "0.95"));
+    expectedMetrics.add(duration.withTags("quantile", "0.98"));
+    expectedMetrics.add(duration.withTags("quantile", "0.99"));
+    expectedMetrics.add(duration.withTags("quantile", "0.999"));
 
     TagEncodedMetricName rate = root.submetric("rate");
     expectedMetrics.add(rate.withTags("window", "1m"));
@@ -264,7 +263,7 @@ public class ApptuitReporterTest {
     try (ScheduledReporter ignored = createReporter(reportingMode)) {
       mockClient.addPutListener(listener);
       metricUpdate.run();
-      await().atMost(period * 5, TimeUnit.SECONDS).until(awaitUntil);
+      await().atMost(period * 15, TimeUnit.SECONDS).until(awaitUntil);
       mockClient.removePutListener(listener);
     }
   }
