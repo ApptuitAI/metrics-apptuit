@@ -16,7 +16,6 @@
 package ai.apptuit.metrics.dropwizard;
 
 import ai.apptuit.metrics.client.DataPoint;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

@@ -16,16 +16,16 @@
 
 package ai.apptuit.metrics.dropwizard;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyCollectionOf;
+import static org.mockito.Mockito.doAnswer;
+import static org.powermock.api.mockito.PowerMockito.mock;
+
 import ai.apptuit.metrics.client.ApptuitPutClient;
 import ai.apptuit.metrics.client.DataPoint;
 import ai.apptuit.metrics.client.Sanitizer;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyCollectionOf;
-import static org.mockito.Mockito.doAnswer;
-import static org.powermock.api.mockito.PowerMockito.mock;
 
 /**
  * @author Rajiv Shivane

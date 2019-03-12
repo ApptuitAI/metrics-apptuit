@@ -16,19 +16,28 @@
 
 package ai.apptuit.metrics.client;
 
+import static org.awaitility.Awaitility.await;
+import static org.junit.Assert.assertEquals;
+
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
-import org.junit.*;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
-import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertEquals;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  * @author Rajiv Shivane

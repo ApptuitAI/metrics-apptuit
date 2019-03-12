@@ -16,14 +16,17 @@
 
 package ai.apptuit.metrics.client;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
-import java.util.*;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Rajiv Shivane
@@ -67,12 +70,12 @@ class Util {
 
   public static void enableHttpClientTracing() {
     java.util.logging.Logger.getLogger("org.apache.http.wire")
-            .setLevel(java.util.logging.Level.FINEST);
+        .setLevel(java.util.logging.Level.FINEST);
     java.util.logging.Logger.getLogger("org.apache.http.headers")
-            .setLevel(java.util.logging.Level.FINEST);
+        .setLevel(java.util.logging.Level.FINEST);
 
     System
-            .setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
+        .setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
     System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true");
     System.setProperty("org.apache.commons.logging.simplelog.log.httpclient.wire", "debug");
     System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http", "debug");

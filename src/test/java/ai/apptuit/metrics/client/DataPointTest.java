@@ -16,9 +16,10 @@
 
 package ai.apptuit.metrics.client;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -26,8 +27,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author Rajiv Shivane

@@ -16,20 +16,37 @@
 
 package ai.apptuit.metrics.client;
 
+import static org.junit.Assert.assertEquals;
+
 import ai.apptuit.metrics.client.ApptuitPutClient.DatapointsHttpEntity;
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import org.json.simple.parser.ParseException;
-import org.junit.*;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.assertEquals;
+import org.json.simple.parser.ParseException;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  * @author Rajiv Shivane

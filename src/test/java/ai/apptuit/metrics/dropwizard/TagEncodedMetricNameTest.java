@@ -16,15 +16,14 @@
 
 package ai.apptuit.metrics.dropwizard;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author Rajiv Shivane
@@ -130,7 +129,7 @@ public class TagEncodedMetricNameTest {
   @Test
   public void testSubmetricForMetricWithTags() throws Exception {
     assertEquals(encodedMetricName.withTags("k1", "v1").submetric("pqr").withTags("k2", "v2"),
-            encodedMetricName.submetric("pqr").withTags("k1", "v1").withTags("k2", "v2"));
+        encodedMetricName.submetric("pqr").withTags("k1", "v1").withTags("k2", "v2"));
   }
 
   @Test
@@ -138,19 +137,19 @@ public class TagEncodedMetricNameTest {
     Map<String, String> map = new HashMap<>();
     map.put("k2", "v2");
     assertEquals(encodedMetricName.withTags("k1", "v1").submetric("pqr").withTags(map),
-            encodedMetricName.submetric("pqr").withTags("k1", "v1").withTags("k2", "v2"));
+        encodedMetricName.submetric("pqr").withTags("k1", "v1").withTags("k2", "v2"));
   }
 
   @Test
   public void testIgnoreTagOrder() throws Exception {
     TagEncodedMetricName t1 = encodedMetricName
-            .withTags("k1", "v1")
-            .withTags("k2", "v2")
-            .withTags("a", "b");
+        .withTags("k1", "v1")
+        .withTags("k2", "v2")
+        .withTags("a", "b");
     TagEncodedMetricName t2 = encodedMetricName
-            .withTags("a", "b")
-            .withTags("k2", "v2")
-            .withTags("k1", "v1");
+        .withTags("a", "b")
+        .withTags("k2", "v2")
+        .withTags("k1", "v1");
     assertEquals(t1.toString(), t2.toString());
   }
 }
