@@ -59,7 +59,7 @@ public class ApptuitReporterFactory {
 
   private ApptuitReporter.ReportingMode reportingMode;
 
-  private Sanitizer sanitizer = Sanitizer.PROMETHEUS_SANITZER;
+  private Sanitizer sanitizer = Sanitizer.DEFAULT_SANITIZER;
 
   public void addGlobalTag(String tag, String value) {
     globalTags.put(tag, value);

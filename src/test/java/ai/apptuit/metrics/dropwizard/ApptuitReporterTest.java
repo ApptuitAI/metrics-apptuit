@@ -278,7 +278,7 @@ public class ApptuitReporterTest {
     }
 
     factory.setReportingMode(mode);
-    factory.setSanitizer(Sanitizer.NO_OP_SANITZER);
+    factory.setSanitizer(Sanitizer.NO_OP_SANITIZER);
 
     ScheduledReporter reporter = factory.build(registry);
     reporter.start(period, TimeUnit.SECONDS);

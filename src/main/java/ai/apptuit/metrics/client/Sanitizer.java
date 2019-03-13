@@ -18,9 +18,10 @@ package ai.apptuit.metrics.client;
 
 public interface Sanitizer {
 
-  Sanitizer PROMETHEUS_SANITZER = new PrometheusSanitizer();
-  Sanitizer APPTUIT_SANITZER = new ApptuitSanitizer();
-  Sanitizer NO_OP_SANITZER = new NoOpSanitizer();
+  Sanitizer PROMETHEUS_SANITIZER = new PrometheusSanitizer();
+  Sanitizer APPTUIT_SANITIZER = new ApptuitSanitizer();
+  Sanitizer NO_OP_SANITIZER = new NoOpSanitizer();
+  Sanitizer DEFAULT_SANITIZER = PROMETHEUS_SANITIZER;
 
   String sanitizer(String unSanitizedString);
 
@@ -29,10 +30,10 @@ public interface Sanitizer {
     }
 
     public String sanitizer(String unSanitizedString) {
-      String sanitizedString = ((Character.isDigit(unSanitizedString.charAt(0)) ? "_" : "")
+      return ((Character.isDigit(unSanitizedString.charAt(0)) ? "_" : "")
               + unSanitizedString).replaceAll("[^a-zA-Z0-9_]", "_")
               .replaceAll("[_]+", "_");
-      return sanitizedString;
+
     }
   }
 
@@ -41,9 +42,8 @@ public interface Sanitizer {
     }
 
     public String sanitizer(String unSanitizedString) {
-      String sanitizedString = unSanitizedString.replaceAll("[^\\p{L}\\-./_0-9]+", "_")
+      return unSanitizedString.replaceAll("[^\\p{L}\\-./_0-9]+", "_")
               .replaceAll("[_]+", "_");
-      return sanitizedString;
     }
   }
 

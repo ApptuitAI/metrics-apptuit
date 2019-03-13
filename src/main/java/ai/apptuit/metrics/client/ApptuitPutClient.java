@@ -28,6 +28,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
+import static ai.apptuit.metrics.client.Sanitizer.DEFAULT_SANITIZER;
+
 /**
  * @author Rajiv Shivane
  */
@@ -71,6 +73,10 @@ public class ApptuitPutClient {
     this.globalTags = globalTags;
     this.token = token;
     this.apiEndPoint = (apiEndPoint != null) ? apiEndPoint : DEFAULT_PUT_API_URI;
+  }
+
+  public void put(Collection<DataPoint> dataPoints) {
+    put(dataPoints, DEFAULT_SANITIZER);
   }
 
   public void put(Collection<DataPoint> dataPoints, Sanitizer sanitizer) {

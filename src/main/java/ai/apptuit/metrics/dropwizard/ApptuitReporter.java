@@ -21,7 +21,16 @@ import ai.apptuit.metrics.client.DataPoint;
 import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.client.XCollectorForwarder;
 import com.codahale.metrics.Timer;
-import com.codahale.metrics.*;
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Counting;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Metered;
+import com.codahale.metrics.MetricFilter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.ScheduledReporter;
+import com.codahale.metrics.Snapshot;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -42,10 +51,13 @@ import java.util.logging.Logger;
  */
 public class ApptuitReporter extends ScheduledReporter {
 
+  public static final String QUANTILE = "quantile";
   private static final Logger LOGGER = Logger.getLogger(ApptuitReporter.class.getName());
   private static final boolean DEBUG = false;
   private static final ReportingMode DEFAULT_REPORTING_MODE = ReportingMode.API_PUT;
   private static final String REPORTER_NAME = "apptuit-reporter";
+  public static final String RATE = "rate";
+  public static final String WINDOW = "window";
 
   private final Timer buildReportTimer;
   private final Timer sendReportTimer;
@@ -225,20 +237,20 @@ public class ApptuitReporter extends ScheduledReporter {
       addDataPoint(metric.submetric("max"), convertDuration(snapshot.getMax()));
       addDataPoint(metric.submetric("mean"), convertDuration(snapshot.getMean()));
       addDataPoint(metric.submetric("stddev"), convertDuration(snapshot.getStdDev()));
-      addDataPoint(metric.withTags("quantile", "0.5"), convertDuration(snapshot.getMedian()));
-      addDataPoint(metric.withTags("quantile", "0.75"), convertDuration(snapshot.get75thPercentile()));
-      addDataPoint(metric.withTags("quantile", "0.95"), convertDuration(snapshot.get95thPercentile()));
-      addDataPoint(metric.withTags("quantile", "0.98"), convertDuration(snapshot.get98thPercentile()));
-      addDataPoint(metric.withTags("quantile", "0.99"), convertDuration(snapshot.get99thPercentile()));
-      addDataPoint(metric.withTags("quantile", "0.999"), convertDuration(snapshot.get999thPercentile()));
+      addDataPoint(metric.withTags(QUANTILE, "0.5"), convertDuration(snapshot.getMedian()));
+      addDataPoint(metric.withTags(QUANTILE, "0.75"), convertDuration(snapshot.get75thPercentile()));
+      addDataPoint(metric.withTags(QUANTILE, "0.95"), convertDuration(snapshot.get95thPercentile()));
+      addDataPoint(metric.withTags(QUANTILE, "0.98"), convertDuration(snapshot.get98thPercentile()));
+      addDataPoint(metric.withTags(QUANTILE, "0.99"), convertDuration(snapshot.get99thPercentile()));
+      addDataPoint(metric.withTags(QUANTILE, "0.999"), convertDuration(snapshot.get999thPercentile()));
     }
 
     private void reportMetered(TagEncodedMetricName metric, Metered meter) {
-      addDataPoint(metric.submetric("rate").withTags("window", "1m"),
+      addDataPoint(metric.submetric(RATE).withTags(WINDOW, "1m"),
               convertRate(meter.getOneMinuteRate()));
-      addDataPoint(metric.submetric("rate").withTags("window", "5m"),
+      addDataPoint(metric.submetric(RATE).withTags(WINDOW, "5m"),
               convertRate(meter.getFiveMinuteRate()));
-      addDataPoint(metric.submetric("rate").withTags("window", "15m"),
+      addDataPoint(metric.submetric(RATE).withTags(WINDOW, "15m"),
               convertRate(meter.getFifteenMinuteRate()));
       //addDataPoint(rootMetric.submetric("rate", "window", "all"), epoch, meter.getMeanRate());
     }
