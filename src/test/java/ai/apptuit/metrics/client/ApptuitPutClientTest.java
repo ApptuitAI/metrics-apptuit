@@ -95,7 +95,7 @@ public class ApptuitPutClientTest {
   public void testEntityMarshallingNoGZIP() throws Exception {
     for (int numDataPoints = 1; numDataPoints <= 10; numDataPoints++) {
       ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
-      DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags, Sanitizer.NO_OP_SANITZER, false);
+      DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags, Sanitizer.NO_OP_SANITIZER, false);
 
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       entity.writeTo(baos);
@@ -112,7 +112,7 @@ public class ApptuitPutClientTest {
   public void testEntityMarshallingWithGZIP() throws Exception {
     for (int numDataPoints = 1; numDataPoints <= 10; numDataPoints++) {
       ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
-      DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags, Sanitizer.NO_OP_SANITZER, true);
+      DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags, Sanitizer.NO_OP_SANITIZER, true);
 
       PipedInputStream pis = new PipedInputStream();
 
@@ -146,7 +146,7 @@ public class ApptuitPutClientTest {
 
     URL apiEndPoint = httpServer.getUrl(status);
     ApptuitPutClient client = new ApptuitPutClient(MockServer.token, globalTags, apiEndPoint);
-    client.put(dataPoints, Sanitizer.NO_OP_SANITZER);
+    client.put(dataPoints, Sanitizer.NO_OP_SANITIZER);
 
     List<HttpExchange> exchanges = httpServer.getExchanges();
     List<String> requestBodies = httpServer.getRequestBodies();

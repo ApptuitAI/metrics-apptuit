@@ -81,28 +81,36 @@ public class XCollectorForwarderTest {
 
   @Test
   public void testSinglePacket() throws Exception {
-    testForward(10);
+    testForward(10,Sanitizer.NO_OP_SANITIZER);
   }
 
+  @Test
+  public void testMultiPacketDefaultSanitizer() throws Exception {
+    testForward(250, null);
+  }
 
   @Test
   public void testMultiPacket() throws Exception {
-    testForward(250);
+    testForward(250, Sanitizer.NO_OP_SANITIZER);
   }
 
-  private void testForward(int numDataPoints) throws SocketException {
+  private void testForward(int numDataPoints, Sanitizer sanitizer) throws SocketException {
     ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
 
     XCollectorForwarder forwarder = new XCollectorForwarder(globalTags,
             new InetSocketAddress("127.0.0.1", UDP_PORT));
-    forwarder.forward(dataPoints, Sanitizer.NO_OP_SANITZER);
+    if (sanitizer != null) {
+      forwarder.forward(dataPoints, sanitizer);
+    } else {
+      forwarder.forward(dataPoints);
+    }
 
     await().atMost(5, TimeUnit.SECONDS).until(() -> mockServer.countReceivedDPs() == numDataPoints);
 
     DataPoint[] receivedDPs = mockServer.getReceivedDPs();
     assertEquals(numDataPoints, receivedDPs.length);
     for (int i = 0; i < numDataPoints; i++) {
-      assertEquals(getExpectedDataPoint(dataPoints.get(i), globalTags), receivedDPs[i]);
+      assertEquals(getExpectedDataPoint(dataPoints.get(i), globalTags, sanitizer), receivedDPs[i]);
     }
   }
 
@@ -118,10 +126,13 @@ public class XCollectorForwarderTest {
     return dataPoints;
   }
 
-  private DataPoint getExpectedDataPoint(DataPoint dataPoint, HashMap<String, String> globalTags) {
+  private DataPoint getExpectedDataPoint(DataPoint dataPoint, HashMap<String, String> globalTags, Sanitizer sanitizer) {
     Map<String, String> tags = new HashMap<>(dataPoint.getTags());
     tags.putAll(globalTags);
-    return new DataPoint(dataPoint.getMetric(), dataPoint.getTimestamp(), dataPoint.getValue(),
+    if (sanitizer == null) {
+      sanitizer = Sanitizer.DEFAULT_SANITIZER;
+    }
+    return new DataPoint(sanitizer.sanitizer(dataPoint.getMetric()), dataPoint.getTimestamp(), dataPoint.getValue(),
             tags);
   }
 

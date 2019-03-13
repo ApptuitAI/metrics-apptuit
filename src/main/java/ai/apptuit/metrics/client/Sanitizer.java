@@ -18,9 +18,10 @@ package ai.apptuit.metrics.client;
 
 public interface Sanitizer {
 
-  Sanitizer PROMETHEUS_SANITZER = new PrometheusSanitizer();
-  Sanitizer APPTUIT_SANITZER = new ApptuitSanitizer();
-  Sanitizer NO_OP_SANITZER = new NoOpSanitizer();
+  Sanitizer PROMETHEUS_SANITIZER = new PrometheusSanitizer();
+  Sanitizer APPTUIT_SANITIZER = new ApptuitSanitizer();
+  Sanitizer NO_OP_SANITIZER = new NoOpSanitizer();
+  Sanitizer DEFAULT_SANITIZER = PROMETHEUS_SANITIZER;
 
   String sanitizer(String unSanitizedString);
 

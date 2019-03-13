@@ -73,7 +73,7 @@ public class DataPoint {
   @Override
   public String toString() {
     StringWriter out = new StringWriter();
-    toTextPlain(new PrintWriter(out), null, Sanitizer.NO_OP_SANITZER);
+    toTextPlain(new PrintWriter(out), null, Sanitizer.NO_OP_SANITIZER);
     return out.toString();
   }
 
