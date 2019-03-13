@@ -51,13 +51,13 @@ import java.util.logging.Logger;
  */
 public class ApptuitReporter extends ScheduledReporter {
 
-  public static final String QUANTILE = "quantile";
   private static final Logger LOGGER = Logger.getLogger(ApptuitReporter.class.getName());
   private static final boolean DEBUG = false;
   private static final ReportingMode DEFAULT_REPORTING_MODE = ReportingMode.API_PUT;
   private static final String REPORTER_NAME = "apptuit-reporter";
-  public static final String RATE = "rate";
-  public static final String WINDOW = "window";
+  private static final String QUANTILE_TAG_NAME = "quantile";
+  private static final String WINDOW_TAG_NAME = "window";
+  private static final String RATE_SUBMETRIC = "rate";
 
   private final Timer buildReportTimer;
   private final Timer sendReportTimer;
@@ -237,20 +237,20 @@ public class ApptuitReporter extends ScheduledReporter {
       addDataPoint(metric.submetric("max"), convertDuration(snapshot.getMax()));
       addDataPoint(metric.submetric("mean"), convertDuration(snapshot.getMean()));
       addDataPoint(metric.submetric("stddev"), convertDuration(snapshot.getStdDev()));
-      addDataPoint(metric.withTags(QUANTILE, "0.5"), convertDuration(snapshot.getMedian()));
-      addDataPoint(metric.withTags(QUANTILE, "0.75"), convertDuration(snapshot.get75thPercentile()));
-      addDataPoint(metric.withTags(QUANTILE, "0.95"), convertDuration(snapshot.get95thPercentile()));
-      addDataPoint(metric.withTags(QUANTILE, "0.98"), convertDuration(snapshot.get98thPercentile()));
-      addDataPoint(metric.withTags(QUANTILE, "0.99"), convertDuration(snapshot.get99thPercentile()));
-      addDataPoint(metric.withTags(QUANTILE, "0.999"), convertDuration(snapshot.get999thPercentile()));
+      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.5"), convertDuration(snapshot.getMedian()));
+      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.75"), convertDuration(snapshot.get75thPercentile()));
+      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.95"), convertDuration(snapshot.get95thPercentile()));
+      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.98"), convertDuration(snapshot.get98thPercentile()));
+      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.99"), convertDuration(snapshot.get99thPercentile()));
+      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.999"), convertDuration(snapshot.get999thPercentile()));
     }
 
     private void reportMetered(TagEncodedMetricName metric, Metered meter) {
-      addDataPoint(metric.submetric(RATE).withTags(WINDOW, "1m"),
+      addDataPoint(metric.submetric(RATE_SUBMETRIC).withTags(WINDOW_TAG_NAME, "1m"),
               convertRate(meter.getOneMinuteRate()));
-      addDataPoint(metric.submetric(RATE).withTags(WINDOW, "5m"),
+      addDataPoint(metric.submetric(RATE_SUBMETRIC).withTags(WINDOW_TAG_NAME, "5m"),
               convertRate(meter.getFiveMinuteRate()));
-      addDataPoint(metric.submetric(RATE).withTags(WINDOW, "15m"),
+      addDataPoint(metric.submetric(RATE_SUBMETRIC).withTags(WINDOW_TAG_NAME, "15m"),
               convertRate(meter.getFifteenMinuteRate()));
       //addDataPoint(rootMetric.submetric("rate", "window", "all"), epoch, meter.getMeanRate());
     }
