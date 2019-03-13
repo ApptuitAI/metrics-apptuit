@@ -29,10 +29,10 @@ public interface Sanitizer {
     }
 
     public String sanitizer(String unSanitizedString) {
-      String sanitizedString = ((Character.isDigit(unSanitizedString.charAt(0)) ? "_" : "")
+      return ((Character.isDigit(unSanitizedString.charAt(0)) ? "_" : "")
               + unSanitizedString).replaceAll("[^a-zA-Z0-9_]", "_")
               .replaceAll("[_]+", "_");
-      return sanitizedString;
+
     }
   }
 
@@ -41,9 +41,8 @@ public interface Sanitizer {
     }
 
     public String sanitizer(String unSanitizedString) {
-      String sanitizedString = unSanitizedString.replaceAll("[^\\p{L}\\-./_0-9]+", "_")
+      return unSanitizedString.replaceAll("[^\\p{L}\\-./_0-9]+", "_")
               .replaceAll("[_]+", "_");
-      return sanitizedString;
     }
   }
 
