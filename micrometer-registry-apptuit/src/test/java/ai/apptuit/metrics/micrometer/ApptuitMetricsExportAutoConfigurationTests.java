@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.micrometer_registry_apptuit;
+package ai.apptuit.metrics.micrometer;
 
 import org.junit.Test;
 

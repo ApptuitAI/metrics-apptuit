@@ -133,7 +133,8 @@ public class ApptuitReporterFactory {
       // Include the metric if its name is not excluded and its name is included
       // Where, by default, with no includes setting, all names are included.
       return !stringMatchingStrategy.containsMatch(getExcludes(), name)
-              && (getIncludes().isEmpty() || stringMatchingStrategy.containsMatch(getIncludes(), name));
+              && (getIncludes().isEmpty()
+              || stringMatchingStrategy.containsMatch(getIncludes(), name));
     };
   }
 

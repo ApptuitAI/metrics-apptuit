@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.micrometer_registry_apptuit;
+package ai.apptuit.metrics.micrometer;
 
 import static org.junit.Assert.assertEquals;
 

@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.micrometer_registry_apptuit;
+package ai.apptuit.metrics.micrometer;
 
-import org.springframework.boot.actuate.autoconfigure.metrics.export.properties.StepRegistryPropertiesConfigAdapter;
+import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 
-class ApptuitPropertiesConfigAdapter extends
-		StepRegistryPropertiesConfigAdapter<ApptuitProperties> implements ApptuitConfig {
+public class ApptuitPropertiesConfigAdapterTests {
 
-	ApptuitPropertiesConfigAdapter(ApptuitProperties properties) {
-		super(properties);
-	}
-
-	@Override
-	public String token() {
-		return get(ApptuitProperties::gettoken, ApptuitConfig.super::token);
-	}
-
+    @Test
+    public void whenPropertiesTokenIsSetAdapterTokenReturnsIt() {
+        ApptuitProperties properties = new ApptuitProperties();
+        properties.setToken("123456");
+        assertThat(new ApptuitPropertiesConfigAdapter(properties).token())
+                .isEqualTo("123456");
+    }
 }

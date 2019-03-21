@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.micrometer_registry_apptuit;
+package ai.apptuit.metrics.micrometer;
 
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ApptuitPropertiesConfigAdapterTests {
+public class ApptuitPropertiesTests {
 
     @Test
-    public void whenPropertiesTokenIsSetAdapterTokenReturnsIt() {
+    public void defaultValuesAreConsistent() {
         ApptuitProperties properties = new ApptuitProperties();
-        properties.settoken("123456");
-        assertThat(new ApptuitPropertiesConfigAdapter(properties).token())
-                .isEqualTo("123456");
+        ApptuitConfig config = ApptuitConfig.DEFAULT;
+        assertThat(properties.getToken()).isEqualTo(config.token());
     }
 }

@@ -14,23 +14,19 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.micrometer_registry_apptuit;
+package ai.apptuit.metrics.micrometer;
 
-import io.micrometer.core.instrument.step.StepRegistryConfig;
+import org.springframework.boot.actuate.autoconfigure.metrics.export.properties.StepRegistryPropertiesConfigAdapter;
 
+class ApptuitPropertiesConfigAdapter extends
+        StepRegistryPropertiesConfigAdapter<ApptuitProperties> implements ApptuitConfig {
 
-public interface ApptuitConfig extends StepRegistryConfig {
+  ApptuitPropertiesConfigAdapter(ApptuitProperties properties) {
+    super(properties);
+  }
 
-    ApptuitConfig DEFAULT = k -> null;
-
-    String get(String key);
-
-    default String prefix() {
-        return "apptuit";
-    }
-    
-    default String token() {
-        String v = get(prefix() + ".token");
-        return v == null ? "" : v;
-    }
+  @Override
+  public String token() {
+    return get(ApptuitProperties::getToken, ApptuitConfig.super::token);
+  }
 }

@@ -1,5 +1,3 @@
-
-  
 /*
  * Copyright 2017 Agilx, Inc.
  *

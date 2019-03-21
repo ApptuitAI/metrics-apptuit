@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.micrometer_registry_apptuit;
+package ai.apptuit.metrics.micrometer;
 
 import io.micrometer.core.instrument.Clock;
 
@@ -34,25 +34,25 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @AutoConfigureBefore({ CompositeMeterRegistryAutoConfiguration.class,
-		SimpleMetricsExportAutoConfiguration.class })
+        SimpleMetricsExportAutoConfiguration.class })
 @AutoConfigureAfter(MetricsAutoConfiguration.class)
 @ConditionalOnBean(Clock.class)
 @ConditionalOnClass(ApptuitMeterRegistry.class)
-@ConditionalOnProperty(prefix = "management.metrics.export.apptuit", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "management.metrics.export.apptuit", name = "enabled",
+        havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(ApptuitProperties.class)
 public class ApptuitMetricsExportAutoConfiguration {
 
-	@Bean
-	@ConditionalOnMissingBean
-	public ApptuitConfig apptuitConfig(ApptuitProperties apptuitProperties) {
-		return new ApptuitPropertiesConfigAdapter(apptuitProperties);
-	}
+  @Bean
+  @ConditionalOnMissingBean
+  public ApptuitConfig apptuitConfig(ApptuitProperties apptuitProperties) {
+    return new ApptuitPropertiesConfigAdapter(apptuitProperties);
+  }
 
-	@Bean
-	@ConditionalOnMissingBean
-	public ApptuitMeterRegistry apptuitMeterRegistry(ApptuitConfig apptuitConfig,
-			Clock clock) {
-		return new ApptuitMeterRegistry(apptuitConfig, clock);
-	}
-
+  @Bean
+  @ConditionalOnMissingBean
+  public ApptuitMeterRegistry apptuitMeterRegistry(ApptuitConfig apptuitConfig,
+                                                   Clock clock) {
+    return new ApptuitMeterRegistry(apptuitConfig, clock);
+  }
 }

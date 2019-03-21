@@ -16,7 +16,15 @@
 
 package ai.apptuit.metrics.client;
 
-import java.io.*;
+import static ai.apptuit.metrics.client.Sanitizer.DEFAULT_SANITIZER;
+
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -28,7 +36,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
-import static ai.apptuit.metrics.client.Sanitizer.DEFAULT_SANITIZER;
 
 /**
  * @author Rajiv Shivane
