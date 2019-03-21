@@ -51,7 +51,7 @@ public class ApptuitMeterRegistryTest {
     };
     private static final ThreadFactory DEFAULT_THREAD_FACTORY = new NamedThreadFactory("apptuit-metrics-publisher");
     private ApptuitMeterRegistry registry = ApptuitMeterRegistry.builder(config).clock(clock).build();
-    ApptuitMeterRegistry.DataPointCollector collector = registry.new DataPointCollector(System.currentTimeMillis() / 1000);
+    private ApptuitMeterRegistry.DataPointCollector collector = registry.new DataPointCollector(System.currentTimeMillis() / 1000);
     private Random r = new Random();
     private int rangeMin = 1;
     private int rangeMax = 1000;
