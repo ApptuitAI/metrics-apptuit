@@ -126,8 +126,8 @@ public class ApptuitReporterFactory {
   }
 
   public MetricFilter getFilter() {
-    final StringMatchingStrategy stringMatchingStrategy = getUseRegexFilters()
-                                                            ? REGEX_STRING_MATCHING_STRATEGY : DEFAULT_STRING_MATCHING_STRATEGY;
+    final StringMatchingStrategy stringMatchingStrategy =
+      getUseRegexFilters() ? REGEX_STRING_MATCHING_STRATEGY : DEFAULT_STRING_MATCHING_STRATEGY;
 
     return (name, metric) -> {
       // Include the metric if its name is not excluded and its name is included
