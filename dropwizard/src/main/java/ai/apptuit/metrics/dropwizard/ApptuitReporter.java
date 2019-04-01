@@ -20,6 +20,7 @@ import ai.apptuit.metrics.client.ApptuitPutClient;
 import ai.apptuit.metrics.client.DataPoint;
 import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.client.XCollectorForwarder;
+import com.codahale.metrics.Timer;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Counting;
 import com.codahale.metrics.Gauge;
@@ -30,7 +31,6 @@ import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.Snapshot;
-import com.codahale.metrics.Timer;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -131,8 +131,7 @@ public class ApptuitReporter extends ScheduledReporter {
           timers.forEach(collector::collectTimer);
 
           debug("################");
-          int numMetrics = gauges.size() + counters.size() + histograms.size()
-                  + meters.size() + timers.size();
+          int numMetrics = gauges.size() + counters.size() + histograms.size() + meters.size() + timers.size();
           metricsSentCounter.inc(numMetrics);
           pointsSentCounter.inc(collector.dataPoints.size());
           return null;
@@ -205,8 +204,7 @@ public class ApptuitReporter extends ScheduledReporter {
 
     private void collectHistogram(String name, Histogram histogram) {
       TagEncodedMetricName rootMetric = TagEncodedMetricName.decode(name);
-      collectCounting(rootMetric.submetric("count"), histogram,
-              () -> reportSnapshot(rootMetric, histogram.getSnapshot()));
+      collectCounting(rootMetric.submetric("count"), histogram, () -> reportSnapshot(rootMetric, histogram.getSnapshot()));
     }
 
     private void collectMeter(String name, Meter meter) {
@@ -239,27 +237,21 @@ public class ApptuitReporter extends ScheduledReporter {
       addDataPoint(metric.submetric("max"), convertDuration(snapshot.getMax()));
       addDataPoint(metric.submetric("mean"), convertDuration(snapshot.getMean()));
       addDataPoint(metric.submetric("stddev"), convertDuration(snapshot.getStdDev()));
-      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.5"),
-              convertDuration(snapshot.getMedian()));
-      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.75"),
-              convertDuration(snapshot.get75thPercentile()));
-      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.95"),
-              convertDuration(snapshot.get95thPercentile()));
-      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.98"),
-              convertDuration(snapshot.get98thPercentile()));
-      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.99"),
-              convertDuration(snapshot.get99thPercentile()));
-      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.999"),
-              convertDuration(snapshot.get999thPercentile()));
+      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.5"), convertDuration(snapshot.getMedian()));
+      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.75"), convertDuration(snapshot.get75thPercentile()));
+      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.95"), convertDuration(snapshot.get95thPercentile()));
+      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.98"), convertDuration(snapshot.get98thPercentile()));
+      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.99"), convertDuration(snapshot.get99thPercentile()));
+      addDataPoint(metric.withTags(QUANTILE_TAG_NAME, "0.999"), convertDuration(snapshot.get999thPercentile()));
     }
 
     private void reportMetered(TagEncodedMetricName metric, Metered meter) {
       addDataPoint(metric.submetric(RATE_SUBMETRIC).withTags(WINDOW_TAG_NAME, "1m"),
-              convertRate(meter.getOneMinuteRate()));
+        convertRate(meter.getOneMinuteRate()));
       addDataPoint(metric.submetric(RATE_SUBMETRIC).withTags(WINDOW_TAG_NAME, "5m"),
-              convertRate(meter.getFiveMinuteRate()));
+        convertRate(meter.getFiveMinuteRate()));
       addDataPoint(metric.submetric(RATE_SUBMETRIC).withTags(WINDOW_TAG_NAME, "15m"),
-              convertRate(meter.getFifteenMinuteRate()));
+        convertRate(meter.getFifteenMinuteRate()));
       //addDataPoint(rootMetric.submetric("rate", "window", "all"), epoch, meter.getMeanRate());
     }
 

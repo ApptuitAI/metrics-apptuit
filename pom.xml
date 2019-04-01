@@ -11,7 +11,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>ai.apptuit</groupId>
   <artifactId>metrics-apptuit</artifactId>
@@ -19,7 +21,6 @@ limitations under the License.
   <packaging>pom</packaging>
   <name>metrics-apptuit</name>
   <url>https://github.com/ApptuitAI/metrics-apptuit/</url>
-
   <inceptionYear>2017</inceptionYear>
   <scm>
     <url>https://github.com/ApptuitAI/metrics-apptuit</url>
@@ -43,8 +44,13 @@ limitations under the License.
       <name>metrics-apptuit</name>
       <url>https://api.bintray.com/maven/apptuitai/maven/metrics-apptuit/;publish=1</url>
     </repository>
+    <relocation>
+      <groupId>ai.apptuit</groupId>
+      <artifactId>metrics-apptuit-dropwizard</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </relocation>
   </distributionManagement>
-  
+
   <modules>
     <module>client</module>
     <module>dropwizard</module>
@@ -52,9 +58,11 @@ limitations under the License.
   </modules>
 
   <properties>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <maven.compiler.source>1.8</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+
+    <dependency.locations.enabled>false</dependency.locations.enabled>
 
     <!-- Aliases -->
     <built.jar.path>${project.build.directory}/${project.build.finalName}.jar</built.jar.path>
@@ -80,7 +88,7 @@ limitations under the License.
     <surefire.version>2.21.0</surefire.version>
     <junit.version>4.12</junit.version>
     <powermock.version>1.7.4</powermock.version>
-    <jacoco.version>0.8.1</jacoco.version>
+    <jacoco.version>0.8.3</jacoco.version>
     <metrics.version>3.2.6</metrics.version>
 
     <!-- Acceptance Criteria -->
@@ -110,6 +118,7 @@ limitations under the License.
           </execution>
           <execution>
             <id>default-restore-instrumented-classes</id>
+            <phase>test</phase>
             <goals>
               <goal>restore-instrumented-classes</goal>
             </goals>
@@ -269,7 +278,6 @@ limitations under the License.
       </plugin>
     </plugins>
   </build>
-
   <reporting>
     <plugins>
       <plugin>
@@ -408,4 +416,3 @@ limitations under the License.
     </plugins>
   </reporting>
 </project>
-
