@@ -16,9 +16,11 @@
 
 package ai.apptuit.metrics.dropwizard;
 
+import ai.apptuit.metrics.client.Sanitizer;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -34,10 +36,10 @@ import java.util.concurrent.TimeUnit;
 public class ApptuitReporterFactory {
 
   private static final DefaultStringMatchingStrategy DEFAULT_STRING_MATCHING_STRATEGY =
-      new DefaultStringMatchingStrategy();
+          new DefaultStringMatchingStrategy();
 
   private static final RegexStringMatchingStrategy REGEX_STRING_MATCHING_STRATEGY =
-      new RegexStringMatchingStrategy();
+          new RegexStringMatchingStrategy();
 
   private TimeUnit durationUnit = TimeUnit.MILLISECONDS;
 
@@ -56,6 +58,8 @@ public class ApptuitReporterFactory {
   private String apiUrl;
 
   private ApptuitReporter.ReportingMode reportingMode;
+
+  private Sanitizer sanitizer = Sanitizer.DEFAULT_SANITIZER;
 
   public void addGlobalTag(String tag, String value) {
     globalTags.put(tag, value);
@@ -113,22 +117,31 @@ public class ApptuitReporterFactory {
     this.useRegexFilters = useRegexFilters;
   }
 
+  public void setSanitizer(Sanitizer sanitizer) {
+    this.sanitizer = sanitizer;
+  }
+
+  public Sanitizer getSanitizer() {
+    return this.sanitizer;
+  }
+
   public MetricFilter getFilter() {
     final StringMatchingStrategy stringMatchingStrategy = getUseRegexFilters()
-        ? REGEX_STRING_MATCHING_STRATEGY : DEFAULT_STRING_MATCHING_STRATEGY;
+            ? REGEX_STRING_MATCHING_STRATEGY : DEFAULT_STRING_MATCHING_STRATEGY;
 
     return (name, metric) -> {
       // Include the metric if its name is not excluded and its name is included
       // Where, by default, with no includes setting, all names are included.
       return !stringMatchingStrategy.containsMatch(getExcludes(), name)
-          && (getIncludes().isEmpty() || stringMatchingStrategy.containsMatch(getIncludes(), name));
+              && (getIncludes().isEmpty() || stringMatchingStrategy.containsMatch(getIncludes(), name));
     };
   }
 
   public ScheduledReporter build(MetricRegistry registry) {
     try {
       return new ApptuitReporter(registry, getFilter(), getRateUnit(), getDurationUnit(),
-          globalTags, apiKey, apiUrl != null ? new URL(apiUrl) : null, reportingMode);
+              globalTags, apiKey, apiUrl != null ? new URL(apiUrl) : null,
+              reportingMode, sanitizer);
     } catch (MalformedURLException e) {
       throw new IllegalArgumentException(e);
     }

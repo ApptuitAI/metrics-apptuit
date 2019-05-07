@@ -56,6 +56,10 @@ public class XCollectorForwarder {
   }
 
   public void forward(Collection<DataPoint> dataPoints) {
+    forward(dataPoints, Sanitizer.DEFAULT_SANITIZER);
+  }
+
+  public void forward(Collection<DataPoint> dataPoints, Sanitizer sanitizer) {
 
     if (socket == null) {
       try {
@@ -70,7 +74,7 @@ public class XCollectorForwarder {
 
     int idx = 0;
     for (DataPoint dp : dataPoints) {
-      dp.toTextLine(baos, globalTags);
+      dp.toTextLine(baos, globalTags, sanitizer);
       int size = baos.size();
       if (size >= PACKET_SIZE) {
         sendPacket(baos, idx);
@@ -92,7 +96,7 @@ public class XCollectorForwarder {
     DatagramPacket packet = new DatagramPacket(bytes, 0, idx, xcollectorAddress);
     try {
       socket.send(packet);
-      LOGGER.info(" Forwarded [" + idx+ "] bytes.");
+      LOGGER.info(" Forwarded [" + idx + "] bytes.");
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Error sending packet", e);
     }

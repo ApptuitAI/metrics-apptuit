@@ -20,6 +20,7 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -64,7 +66,7 @@ public class XCollectorForwarderTest {
   @Before
   public void setUp() throws Exception {
     tagEncodedMetricName = TagEncodedMetricName.decode("proc.stat.cpu")
-        .withTags("type", "idle");
+            .withTags("type", "idle");
 
     globalTags = new HashMap<>();
     globalTags.put("host", "rajiv");
@@ -79,28 +81,36 @@ public class XCollectorForwarderTest {
 
   @Test
   public void testSinglePacket() throws Exception {
-    testForward(10);
+    testForward(10,Sanitizer.NO_OP_SANITIZER);
   }
 
+  @Test
+  public void testMultiPacketDefaultSanitizer() throws Exception {
+    testForward(250, null);
+  }
 
   @Test
   public void testMultiPacket() throws Exception {
-    testForward(250);
+    testForward(250, Sanitizer.NO_OP_SANITIZER);
   }
 
-  private void testForward(int numDataPoints) throws SocketException {
+  private void testForward(int numDataPoints, Sanitizer sanitizer) throws SocketException {
     ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
 
     XCollectorForwarder forwarder = new XCollectorForwarder(globalTags,
-        new InetSocketAddress("127.0.0.1", UDP_PORT));
-    forwarder.forward(dataPoints);
+            new InetSocketAddress("127.0.0.1", UDP_PORT));
+    if (sanitizer != null) {
+      forwarder.forward(dataPoints, sanitizer);
+    } else {
+      forwarder.forward(dataPoints);
+    }
 
     await().atMost(5, TimeUnit.SECONDS).until(() -> mockServer.countReceivedDPs() == numDataPoints);
 
     DataPoint[] receivedDPs = mockServer.getReceivedDPs();
     assertEquals(numDataPoints, receivedDPs.length);
     for (int i = 0; i < numDataPoints; i++) {
-      assertEquals(getExpectedDataPoint(dataPoints.get(i), globalTags), receivedDPs[i]);
+      assertEquals(getExpectedDataPoint(dataPoints.get(i), globalTags, sanitizer), receivedDPs[i]);
     }
   }
 
@@ -110,17 +120,20 @@ public class XCollectorForwarderTest {
       long value = 99 + i;
       long epoch = System.currentTimeMillis() / 1000 - value;
       DataPoint dataPoint = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-          tagEncodedMetricName.getTags());
+              tagEncodedMetricName.getTags());
       dataPoints.add(dataPoint);
     }
     return dataPoints;
   }
 
-  private DataPoint getExpectedDataPoint(DataPoint dataPoint, HashMap<String, String> globalTags) {
+  private DataPoint getExpectedDataPoint(DataPoint dataPoint, HashMap<String, String> globalTags, Sanitizer sanitizer) {
     Map<String, String> tags = new HashMap<>(dataPoint.getTags());
     tags.putAll(globalTags);
-    return new DataPoint(dataPoint.getMetric(), dataPoint.getTimestamp(), dataPoint.getValue(),
-        tags);
+    if (sanitizer == null) {
+      sanitizer = Sanitizer.DEFAULT_SANITIZER;
+    }
+    return new DataPoint(sanitizer.sanitizer(dataPoint.getMetric()), dataPoint.getTimestamp(), dataPoint.getValue(),
+            tags);
   }
 
   private static class MockServer {
@@ -179,7 +192,7 @@ public class XCollectorForwarderTest {
       private DataPoint toDataPoint(String line) {
         Scanner fields = new Scanner(line).useDelimiter(" ");
         return new DataPoint(fields.next(), fields.nextLong(),
-            fields.nextLong(), getTags(fields));
+                fields.nextLong(), getTags(fields));
       }
 
       private Map<String, String> getTags(Scanner fields) {
