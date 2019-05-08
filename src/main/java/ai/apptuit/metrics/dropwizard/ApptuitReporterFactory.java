@@ -36,10 +36,10 @@ import java.util.concurrent.TimeUnit;
 public class ApptuitReporterFactory {
 
   private static final DefaultStringMatchingStrategy DEFAULT_STRING_MATCHING_STRATEGY =
-          new DefaultStringMatchingStrategy();
+      new DefaultStringMatchingStrategy();
 
   private static final RegexStringMatchingStrategy REGEX_STRING_MATCHING_STRATEGY =
-          new RegexStringMatchingStrategy();
+      new RegexStringMatchingStrategy();
 
   private TimeUnit durationUnit = TimeUnit.MILLISECONDS;
 
@@ -127,21 +127,21 @@ public class ApptuitReporterFactory {
 
   public MetricFilter getFilter() {
     final StringMatchingStrategy stringMatchingStrategy = getUseRegexFilters()
-            ? REGEX_STRING_MATCHING_STRATEGY : DEFAULT_STRING_MATCHING_STRATEGY;
+        ? REGEX_STRING_MATCHING_STRATEGY : DEFAULT_STRING_MATCHING_STRATEGY;
 
     return (name, metric) -> {
       // Include the metric if its name is not excluded and its name is included
       // Where, by default, with no includes setting, all names are included.
       return !stringMatchingStrategy.containsMatch(getExcludes(), name)
-              && (getIncludes().isEmpty() || stringMatchingStrategy.containsMatch(getIncludes(), name));
+          && (getIncludes().isEmpty() || stringMatchingStrategy.containsMatch(getIncludes(), name));
     };
   }
 
   public ScheduledReporter build(MetricRegistry registry) {
     try {
       return new ApptuitReporter(registry, getFilter(), getRateUnit(), getDurationUnit(),
-              globalTags, apiKey, apiUrl != null ? new URL(apiUrl) : null,
-              reportingMode, sanitizer);
+          globalTags, apiKey, apiUrl != null ? new URL(apiUrl) : null,
+          reportingMode, sanitizer);
     } catch (MalformedURLException e) {
       throw new IllegalArgumentException(e);
     }
