@@ -30,10 +30,13 @@ import java.util.logging.Logger;
  */
 public class Package {
 
-  public static final String VERSION = loadAgentVersion();
   private static final Logger LOGGER = Logger.getLogger(Package.class.getName());
+  public static final String VERSION = loadPackageVersion();
 
-  private static String loadAgentVersion() {
+  private Package() {
+  }
+
+  private static String loadPackageVersion() {
     Enumeration<URL> resources = null;
     try {
       resources = Package.class.getClassLoader().getResources("META-INF/MANIFEST.MF");
