@@ -161,7 +161,7 @@ public class ApptuitPutClientTest {
     assertEquals("gzip", headers.getFirst("Content-Encoding"));
     assertEquals("application/json", headers.getFirst("Content-Type"));
     assertEquals("Bearer " + MockServer.token, headers.getFirst("Authorization"));
-    assertThat(headers.getFirst("User-Agent"), containsString("metrics-apptuit/"));
+    assertThat(headers.getFirst("User-Agent"), containsString("metrics-apptuit/1.0-SNAPSHOT Java/"));
 
     DataPoint[] unmarshalledDPs = Util.jsonToDataPoints(requestBodies.get(0));
 

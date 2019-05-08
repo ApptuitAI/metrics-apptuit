@@ -50,7 +50,7 @@ public class Package {
         if (mainAttributes != null) {
           String agentClass = mainAttributes.getValue("Implementation-Title");
           if ("metrics-apptuit".equals(agentClass)) {
-            String packageVersion = mainAttributes.getValue("Agent-Version");
+            String packageVersion = mainAttributes.getValue("Implementation-Version");
             if (packageVersion != null) {
               return packageVersion;
             }

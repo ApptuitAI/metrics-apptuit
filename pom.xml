@@ -293,6 +293,9 @@ limitations under the License.
         <artifactId>apache-rat-plugin</artifactId>
         <version>0.12</version>
         <configuration>
+          <excludes>
+            <exclude>src/test/resources/META-INF/MANIFEST.MF</exclude>
+          </excludes>
           <ignoreErrors>${ignore.license.checks}</ignoreErrors>
           <reportStyle>xml</reportStyle>
           <reportFile>${project.build.directory}/reports/license-check-results.xml</reportFile>
