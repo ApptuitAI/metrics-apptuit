@@ -20,7 +20,6 @@ import ai.apptuit.metrics.client.ApptuitPutClient;
 import ai.apptuit.metrics.client.DataPoint;
 import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.client.XCollectorForwarder;
-import com.codahale.metrics.Timer;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Counting;
 import com.codahale.metrics.Gauge;
@@ -31,6 +30,7 @@ import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.Snapshot;
+import com.codahale.metrics.Timer;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -247,11 +247,11 @@ public class ApptuitReporter extends ScheduledReporter {
 
     private void reportMetered(TagEncodedMetricName metric, Metered meter) {
       addDataPoint(metric.submetric(RATE_SUBMETRIC).withTags(WINDOW_TAG_NAME, "1m"),
-              convertRate(meter.getOneMinuteRate()));
+          convertRate(meter.getOneMinuteRate()));
       addDataPoint(metric.submetric(RATE_SUBMETRIC).withTags(WINDOW_TAG_NAME, "5m"),
-              convertRate(meter.getFiveMinuteRate()));
+          convertRate(meter.getFiveMinuteRate()));
       addDataPoint(metric.submetric(RATE_SUBMETRIC).withTags(WINDOW_TAG_NAME, "15m"),
-              convertRate(meter.getFifteenMinuteRate()));
+          convertRate(meter.getFifteenMinuteRate()));
       //addDataPoint(rootMetric.submetric("rate", "window", "all"), epoch, meter.getMeanRate());
     }
 
