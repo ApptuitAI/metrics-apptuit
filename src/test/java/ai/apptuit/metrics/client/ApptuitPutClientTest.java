@@ -16,6 +16,8 @@
 
 package ai.apptuit.metrics.client;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.client.ApptuitPutClient.DatapointsHttpEntity;
@@ -159,6 +161,7 @@ public class ApptuitPutClientTest {
     assertEquals("gzip", headers.getFirst("Content-Encoding"));
     assertEquals("application/json", headers.getFirst("Content-Type"));
     assertEquals("Bearer " + MockServer.token, headers.getFirst("Authorization"));
+    assertThat(headers.getFirst("User-Agent"), containsString("metrics-apptuit/"));
 
     DataPoint[] unmarshalledDPs = Util.jsonToDataPoints(requestBodies.get(0));
 

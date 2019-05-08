@@ -16,7 +16,15 @@
 
 package ai.apptuit.metrics.client;
 
-import java.io.*;
+import static ai.apptuit.metrics.client.Sanitizer.DEFAULT_SANITIZER;
+
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -28,7 +36,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
-import static ai.apptuit.metrics.client.Sanitizer.DEFAULT_SANITIZER;
 
 /**
  * @author Rajiv Shivane
@@ -96,6 +103,7 @@ public class ApptuitPutClient {
       urlConnection.setChunkedStreamingMode(0);
 
       urlConnection.setRequestProperty(CONTENT_TYPE, APPLICATION_JSON);
+      setUserAgent(urlConnection);
       if (GZIP) {
         urlConnection.setRequestProperty(CONTENT_ENCODING, CONTENT_ENCODING_GZIP);
       }
@@ -103,8 +111,7 @@ public class ApptuitPutClient {
       urlConnection.setRequestMethod("POST");
       urlConnection.setDoInput(true);
       urlConnection.setDoOutput(true);
-      OutputStream outputStream = new BufferedOutputStream(urlConnection.getOutputStream(),
-              BUFFER_SIZE);
+      OutputStream outputStream = new BufferedOutputStream(urlConnection.getOutputStream(), BUFFER_SIZE);
       entity.writeTo(outputStream);
       outputStream.flush();
 
@@ -126,13 +133,19 @@ public class ApptuitPutClient {
       }
 
       String encoding = urlConnection.getContentEncoding() == null ? "UTF-8"
-              : urlConnection.getContentEncoding();
+          : urlConnection.getContentEncoding();
       String responseBody = consumeResponse(inputStr, Charset.forName(encoding));
       debug(responseBody);
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Error draining response", e);
     }
 
+  }
+
+  private void setUserAgent(HttpURLConnection urlConnection) {
+    String userAgent = "Java/" + System.getProperty("java.version");
+    userAgent = "metrics-apptuit/" + Package.VERSION + " " + userAgent;
+    urlConnection.setRequestProperty("User-Agent", userAgent);
   }
 
   private String consumeResponse(InputStream inputStr, Charset encoding) {
