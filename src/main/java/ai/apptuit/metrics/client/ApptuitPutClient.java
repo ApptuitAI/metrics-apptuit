@@ -81,6 +81,10 @@ public class ApptuitPutClient {
 
   public void put(Collection<DataPoint> dataPoints, Sanitizer sanitizer) {
 
+    if (dataPoints.isEmpty()) {
+      return;
+    }
+
     DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags, sanitizer);
 
     HttpURLConnection urlConnection;
