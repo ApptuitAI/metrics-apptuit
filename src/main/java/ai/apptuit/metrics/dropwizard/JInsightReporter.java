@@ -36,7 +36,7 @@ public class JInsightReporter implements Closeable, Reporter {
   }
 
 
-  private JInsightReporter(MetricRegistry registry, Closeable function) {
+  private JInsightReporter(Closeable function) {
     this.closeable = function;
   }
 
@@ -86,7 +86,7 @@ public class JInsightReporter implements Closeable, Reporter {
       }
 
 
-      return new JInsightReporter(registry, () -> {
+      return new JInsightReporter(() -> {
         try {
           deRegister.invoke(delegate, this.registry);
         } catch (IllegalAccessException | InvocationTargetException e) {
