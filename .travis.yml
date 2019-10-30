@@ -44,12 +44,12 @@ cache:
     - '$HOME/.codacy/reporter'
 
 before_install:
-  - sudo apt-get install jq
-  - wget -O ~/.codacy/reporter/codacy-reporter-latest.jar https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/4.0.1/codacy-coverage-reporter-4.0.1-assembly.jar
+  - sudo apt-get install -qq -y jq
+  - wget -nv -O ~/.codacy/reporter/codacy-reporter-latest.jar https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/4.0.1/codacy-coverage-reporter-4.0.1-assembly.jar
 
 install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y xmlstarlet
+  - sudo apt-get install -qq -y xmlstarlet
 
 before_script:
   - if [[ "$METRICS_VERSION" = "3.2.6" ]]; then export IS_PRIMARY_MATRIX_JOB=true; fi
@@ -67,9 +67,9 @@ before_script:
 script:
   - |
     if [[ "$SONAR_ENABLED" = "true" ]] && [[ "$TRAVIS_PULL_REQUEST" = "false" ]] && [[ "$IS_PRIMARY_MATRIX_JOB" = "true" ]]; then
-      mvn verify sonar:sonar -Denv.server.ip=127.0.0.1
+      mvn verify sonar:sonar -Denv.server.ip=127.0.0.1 -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
     else
-      mvn verify -Denv.server.ip=127.0.0.1
+      mvn verify -Denv.server.ip=127.0.0.1 -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
     fi
 
 after_success:
@@ -81,7 +81,7 @@ after_success:
 
 deploy:
   - provider: script
-    script: "mvn -s .maven.settings.xml deploy -DskipTests"
+    script: "mvn -s .maven.settings.xml deploy -DskipTests -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN"
     skip_cleanup: true
     on:
       tags: true
