@@ -22,7 +22,7 @@ limitations under the License.
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>ai.apptuit</groupId>
+        <groupId>ai.apptuit.metrics</groupId>
         <artifactId>metrics-apptuit</artifactId>
         <version>${revision}</version>
     </parent>
