@@ -58,7 +58,7 @@ before_script:
   - |
     if [[ "$TRAVIS_TAG" =~ $SEMVER_REGEX ]]; then
       export PACKAGE_VERSION=${TRAVIS_TAG#v};
-      xmlstarlet ed --inplace -u "/_:project/_:version" -v "$PACKAGE_VERSION" pom.xml;
+      xmlstarlet ed --inplace -u "/_:project//_:properties/_:revision" -v "$PACKAGE_VERSION" pom.xml;
     fi
   - echo $TRAVIS_TAG
   - echo $PACKAGE_VERSION
