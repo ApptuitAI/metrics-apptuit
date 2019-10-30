@@ -81,9 +81,7 @@ public class PrometheusClient {
     urlConnection.setReadTimeout(SOCKET_TIMEOUT_MS);
     urlConnection.setRequestMethod("POST");
 
-    //urlConnection.setRequestProperty("Authorization", "Bearer " + token);
-    String basicAuth = Base64.getEncoder().encodeToString((token + ":" + token).getBytes(StandardCharsets.UTF_8));
-    urlConnection.setRequestProperty("Authorization", "Basic " + basicAuth);
+    urlConnection.setRequestProperty("Authorization", getAuthHeader());
 
     String urlParameters = "start=" + (startEpochMillis / 1000)
         + "&end=" + (endEpochMillis / 1000)
@@ -129,6 +127,12 @@ public class PrometheusClient {
       default:
         throw new ResponseStatusException(responseCode, response);
     }
+  }
+
+  private String getAuthHeader() {
+    // return "Bearer " + token;
+    byte[] userPass = (token + ":" + token).getBytes(StandardCharsets.UTF_8);
+    return "Basic " + Base64.getEncoder().encodeToString(userPass);
   }
 
   static long getStepSize(long queryRangeMillis) {
