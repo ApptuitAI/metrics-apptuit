@@ -96,17 +96,8 @@ limitations under the License.
         <module>prometheus-client</module>
     </modules>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>findbugs</artifactId>
-            <version>3.0.1</version>
-        </dependency>
-    </dependencies>
     <build>
-
         <plugins>
-
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
@@ -145,18 +136,6 @@ limitations under the License.
                             <goal>prepare-agent</goal>
                         </goals>
                     </execution>
-                    <!--
-                                        <execution>
-                                            <id>report</id>
-                                            <phase>prepare-package</phase>
-                                            <goals>
-                                                <goal>report</goal>
-                                            </goals>
-                                            <configuration>
-                                                <dataFile>${jacoco.dest.path}</dataFile>
-                                            </configuration>
-                                        </execution>
-                    -->
                     <execution>
                         <id>default-report</id>
                         <goals>
