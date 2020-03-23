@@ -137,7 +137,7 @@ public class ApptuitPutClient {
       String responseBody = consumeResponse(inputStr, Charset.forName(encoding));
       debug(responseBody);
       if (status >= HttpURLConnection.HTTP_BAD_REQUEST) {
-        throw new IOException(responseBody);
+        throw new ResponseStatusException(status, responseBody);
       }
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Error draining response", e);
