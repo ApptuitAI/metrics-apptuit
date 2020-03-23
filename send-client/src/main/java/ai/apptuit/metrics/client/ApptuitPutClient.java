@@ -86,7 +86,7 @@ public class ApptuitPutClient {
     put(dataPoints, DEFAULT_SANITIZER);
   }
 
-  public void put(Collection<DataPoint> dataPoints, Sanitizer sanitizer) {
+  public void send(Collection<DataPoint> dataPoints, Sanitizer sanitizer) throws IOException {
 
     if (dataPoints.isEmpty()) {
       return;
@@ -120,7 +120,7 @@ public class ApptuitPutClient {
     } catch (IOException e) {
       //TODO: Return status to caller, so they can choose to retry etc
       LOGGER.log(Level.SEVERE, "Error posting data", e);
-      return;
+      throw e;
     }
 
     try {
@@ -136,10 +136,21 @@ public class ApptuitPutClient {
           : urlConnection.getContentEncoding();
       String responseBody = consumeResponse(inputStr, Charset.forName(encoding));
       debug(responseBody);
+      if (status >= HttpURLConnection.HTTP_BAD_REQUEST) {
+        throw new IOException(responseBody);
+      }
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Error draining response", e);
+      throw e;
     }
+  }
 
+  public void put(Collection<DataPoint> dataPoints, Sanitizer sanitizer){
+    try {
+      send(dataPoints, sanitizer);
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Error sending data", e);
+    }
   }
 
   private void setUserAgent(HttpURLConnection urlConnection) {
@@ -148,7 +159,7 @@ public class ApptuitPutClient {
     urlConnection.setRequestProperty("User-Agent", userAgent);
   }
 
-  private String consumeResponse(InputStream inputStr, Charset encoding) {
+  private String consumeResponse(InputStream inputStr, Charset encoding) throws IOException {
     StringBuilder body = new StringBuilder();
     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStr, encoding));
     try {
@@ -166,6 +177,7 @@ public class ApptuitPutClient {
       }
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Error reading response", e);
+      throw e;
     }
     return body == null ? "Response too long" : body.toString();
   }
