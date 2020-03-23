@@ -139,6 +139,16 @@ public class ApptuitPutClientTest {
     testPut(400);
   }
 
+  @Test
+  public void testSend200() throws Exception {
+    testSend(200, false);
+  }
+
+  @Test
+  public void testSend400() throws Exception {
+    testSend(400, true);
+  }
+
   private void testPut(int status) throws MalformedURLException, ParseException {
     //Util.enableHttpClientTracing();
 
@@ -149,6 +159,43 @@ public class ApptuitPutClientTest {
     ApptuitPutClient client = new ApptuitPutClient(MockServer.token, globalTags, apiEndPoint);
     client.put(dataPoints, Sanitizer.NO_OP_SANITIZER);
 
+    List<HttpExchange> exchanges = httpServer.getExchanges();
+    List<String> requestBodies = httpServer.getRequestBodies();
+
+    HttpExchange exchange = exchanges.get(0);
+    assertEquals("POST", exchange.getRequestMethod());
+    assertEquals(MockServer.path, exchange.getRequestURI().getPath());
+
+    Headers headers = exchange.getRequestHeaders();
+    assertEquals("gzip", headers.getFirst("Content-Encoding"));
+    assertEquals("application/json", headers.getFirst("Content-Type"));
+    assertEquals("Bearer " + MockServer.token, headers.getFirst("Authorization"));
+    assertThat(headers.getFirst("User-Agent"), containsString("metrics-apptuit/1.0-SNAPSHOT Java/"));
+
+    DataPoint[] unmarshalledDPs = Util.jsonToDataPoints(requestBodies.get(0));
+
+    assertEquals(numDataPoints, unmarshalledDPs.length);
+    for (int i = 0; i < numDataPoints; i++) {
+      assertEquals(getExpectedDataPoint(dataPoints.get(i), globalTags), unmarshalledDPs[i]);
+    }
+  }
+
+  private void testSend(int status, boolean exceptException) throws MalformedURLException, ParseException {
+    //Util.enableHttpClientTracing();
+
+    int numDataPoints = 10;
+    ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
+    boolean exceptionOccurred = false;
+    URL apiEndPoint = httpServer.getUrl(status);
+    ApptuitPutClient client = new ApptuitPutClient(MockServer.token, globalTags, apiEndPoint);
+    try {
+      client.send(dataPoints, Sanitizer.NO_OP_SANITIZER);
+    } catch (IOException ignored) {
+      exceptionOccurred = true;
+    }
+    if (exceptException != exceptionOccurred) {
+      assertThat("Exception expected", false);
+    }
     List<HttpExchange> exchanges = httpServer.getExchanges();
     List<String> requestBodies = httpServer.getRequestBodies();
 
