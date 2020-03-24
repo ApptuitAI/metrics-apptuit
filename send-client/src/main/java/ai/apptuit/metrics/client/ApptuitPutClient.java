@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -86,7 +87,7 @@ public class ApptuitPutClient {
     put(dataPoints, DEFAULT_SANITIZER);
   }
 
-  public void send(Collection<DataPoint> dataPoints, Sanitizer sanitizer) throws IOException {
+  public void send(Collection<DataPoint> dataPoints, Sanitizer sanitizer) throws ConnectException, ResponseStatusException, IOException {
 
     if (dataPoints.isEmpty()) {
       return;
