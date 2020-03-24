@@ -31,11 +31,7 @@ import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 import org.json.simple.parser.ParseException;
@@ -125,53 +121,85 @@ public class ApptuitPutClientTest {
     }
   }
 
+  Caller putCaller = new Caller() {
+    @Override
+    void callMethod(ApptuitPutClient client, List<DataPoint> dataPoints, Sanitizer sanitizer) throws ConnectException, IOException {
+      client.put(dataPoints, sanitizer);
+    }
+  };
+
+  Caller sendCaller = new Caller() {
+    @Override
+    void callMethod(ApptuitPutClient client, List<DataPoint> dataPoints, Sanitizer sanitizer) throws ConnectException, IOException {
+      client.send(dataPoints, sanitizer);
+    }
+  };
+
   @Test
   public void testPut200() throws Exception {
-    testPut(200);
+    testMethod(putCaller, 200);
   }
 
   @Test
   public void testPut400() throws Exception {
-    testPut(400);
+    testMethod(putCaller, 400);
   }
 
   @Test
   public void testSend200() throws Exception {
-    testSend(200, false);
+    testMethod(sendCaller, 200, false);
   }
 
   @Test
   public void testSendFakeToken() throws Exception {
-    testSend(401, true, "FAKE_TOKEN");
+    testMethod(sendCaller, 401, true, "FAKE_TOKEN");
   }
 
   @Test
   public void testSend400() throws Exception {
-    testSend(400, true);
+    testMethod(sendCaller, 400, true);
   }
 
   @Test
   public void testSend500() throws Exception {
-    testSend(500, true);
+    testMethod(sendCaller, 500, true);
   }
 
   @Test(expected = ConnectException.class)
   public void testSendConnectionError() throws MalformedURLException, ParseException, ConnectException {
     String url = "http://localhost:" + 123 +"/api/put";
-    testSend(false, MockServer.token, new URL(url));
+    testMethod(sendCaller, false, MockServer.token, new URL(url));
   }
 
-  private void testPut(int status) throws MalformedURLException, ParseException {
-    //Util.enableHttpClientTracing();
+  private void testMethod(Caller caller, int status) throws MalformedURLException, ParseException, ConnectException {
+    testMethod(caller, status, false, MockServer.token);
+  }
+
+  private void testMethod(Caller caller, int status, boolean exceptException) throws MalformedURLException, ParseException, ConnectException {
+    testMethod(caller, status, exceptException, MockServer.token);
+  }
+
+  private void testMethod(Caller caller, int status, boolean exceptException, String token) throws MalformedURLException, ParseException, ConnectException {
+    testMethod(caller, exceptException, token, httpServer.getUrl(status));
+  }
+
+  private void testMethod(Caller caller, boolean exceptException, String token, URL apiEndPoint) throws ParseException, ConnectException {
+//    Util.enableHttpClientTracing();
 
     int numDataPoints = 10;
     ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
-
-    URL apiEndPoint = httpServer.getUrl(status);
-    ApptuitPutClient client = new ApptuitPutClient(MockServer.token, globalTags, apiEndPoint);
-    client.put(dataPoints, Sanitizer.NO_OP_SANITIZER);
-
-    validate(numDataPoints, dataPoints, MockServer.token);
+    boolean exceptionOccurred = false;
+    ApptuitPutClient client = new ApptuitPutClient(token, globalTags, apiEndPoint);
+    try {
+      caller.callMethod(client, dataPoints, Sanitizer.NO_OP_SANITIZER);
+    } catch (ConnectException c) {
+      throw c;
+    }
+    catch (IOException ignored) {
+      exceptionOccurred = true;
+    }
+    if (exceptException != exceptionOccurred) assertThat("Exception expected", false);
+    validate(numDataPoints, dataPoints, token);
   }
 
   private void validate(int numDataPoints, ArrayList<DataPoint> dataPoints, String token) throws ParseException {
@@ -196,35 +224,6 @@ public class ApptuitPutClientTest {
     }
   }
 
-  private void testSend(int status, boolean exceptException) throws MalformedURLException, ParseException, ConnectException {
-    testSend(status, exceptException, MockServer.token);
-  }
-
-  private void testSend(int status, boolean exceptException, String token) throws MalformedURLException, ParseException, ConnectException {
-    testSend(exceptException, token, httpServer.getUrl(status));
-  }
-
-  private void testSend(boolean exceptException, String token, URL apiEndPoint) throws ParseException, ConnectException {
-//    Util.enableHttpClientTracing();
-
-    int numDataPoints = 10;
-    ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
-    boolean exceptionOccurred = false;
-    ApptuitPutClient client = new ApptuitPutClient(token, globalTags, apiEndPoint);
-    try {
-      client.send(dataPoints, Sanitizer.NO_OP_SANITIZER);
-    } catch (ConnectException c) {
-      throw c;
-    }
-    catch (IOException ignored) {
-      exceptionOccurred = true;
-    }
-    if (exceptException != exceptionOccurred) {
-      assertThat("Exception expected", false);
-    }
-    validate(numDataPoints, dataPoints, token);
-  }
-
   private ArrayList<DataPoint> createDataPoints(int numDataPoints) {
     ArrayList<DataPoint> dataPoints = new ArrayList<>(numDataPoints);
     for (int i = 0; i < numDataPoints; i++) {
@@ -242,6 +241,10 @@ public class ApptuitPutClientTest {
     tags.putAll(globalTags);
     return new DataPoint(dataPoint.getMetric(), dataPoint.getTimestamp(), dataPoint.getValue(),
             tags);
+  }
+
+  private static abstract class Caller {
+    abstract void callMethod(ApptuitPutClient client, List<DataPoint> dataPoints, Sanitizer sanitizer) throws ConnectException, IOException;
   }
 
   private static class MockServer {
