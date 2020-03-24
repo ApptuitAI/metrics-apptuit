@@ -155,15 +155,10 @@ public class ApptuitPutClientTest {
     testSend(500, true);
   }
 
-  @Test
-  public void testSendConnectionError() throws MalformedURLException, ParseException {
+  @Test(expected = ConnectException.class)
+  public void testSendConnectionError() throws MalformedURLException, ParseException, ConnectException {
     String url = "http://localhost:" + 123 +"/api/put";
-    try {
-      testSend(false, MockServer.token, new URL(url));
-      assert(false);
-    } catch (ConnectException e) {
-      assert(true);
-    }
+    testSend(false, MockServer.token, new URL(url));
   }
 
   private void testPut(int status) throws MalformedURLException, ParseException {
@@ -176,6 +171,10 @@ public class ApptuitPutClientTest {
     ApptuitPutClient client = new ApptuitPutClient(MockServer.token, globalTags, apiEndPoint);
     client.put(dataPoints, Sanitizer.NO_OP_SANITIZER);
 
+    validate(numDataPoints, dataPoints, MockServer.token);
+  }
+
+  private void validate(int numDataPoints, ArrayList<DataPoint> dataPoints, String token) throws ParseException {
     List<HttpExchange> exchanges = httpServer.getExchanges();
     List<String> requestBodies = httpServer.getRequestBodies();
 
@@ -186,7 +185,7 @@ public class ApptuitPutClientTest {
     Headers headers = exchange.getRequestHeaders();
     assertEquals("gzip", headers.getFirst("Content-Encoding"));
     assertEquals("application/json", headers.getFirst("Content-Type"));
-    assertEquals("Bearer " + MockServer.token, headers.getFirst("Authorization"));
+    assertEquals("Bearer " + token, headers.getFirst("Authorization"));
     assertThat(headers.getFirst("User-Agent"), containsString("metrics-apptuit/1.0-SNAPSHOT Java/"));
 
     DataPoint[] unmarshalledDPs = Util.jsonToDataPoints(requestBodies.get(0));
@@ -223,25 +222,7 @@ public class ApptuitPutClientTest {
     if (exceptException != exceptionOccurred) {
       assertThat("Exception expected", false);
     }
-    List<HttpExchange> exchanges = httpServer.getExchanges();
-    List<String> requestBodies = httpServer.getRequestBodies();
-
-    HttpExchange exchange = exchanges.get(0);
-    assertEquals("POST", exchange.getRequestMethod());
-    assertEquals(MockServer.path, exchange.getRequestURI().getPath());
-
-    Headers headers = exchange.getRequestHeaders();
-    assertEquals("gzip", headers.getFirst("Content-Encoding"));
-    assertEquals("application/json", headers.getFirst("Content-Type"));
-    assertEquals("Bearer " + token, headers.getFirst("Authorization"));
-    assertThat(headers.getFirst("User-Agent"), containsString("metrics-apptuit/1.0-SNAPSHOT Java/"));
-
-    DataPoint[] unmarshalledDPs = Util.jsonToDataPoints(requestBodies.get(0));
-
-    assertEquals(numDataPoints, unmarshalledDPs.length);
-    for (int i = 0; i < numDataPoints; i++) {
-      assertEquals(getExpectedDataPoint(dataPoints.get(i), globalTags), unmarshalledDPs[i]);
-    }
+    validate(numDataPoints, dataPoints, token);
   }
 
   private ArrayList<DataPoint> createDataPoints(int numDataPoints) {
