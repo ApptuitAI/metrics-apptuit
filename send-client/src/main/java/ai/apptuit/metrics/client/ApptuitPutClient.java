@@ -137,8 +137,6 @@ public class ApptuitPutClient {
           : urlConnection.getContentEncoding();
       responseBody = inputStr != null ? consumeResponse(inputStr, Charset.forName(encoding)) : "";
       debug(responseBody);
-    } catch (ConnectException c) {
-      throw c;
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Error draining response", e);
       throw e;
