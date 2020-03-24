@@ -123,7 +123,7 @@ public class ApptuitPutClient {
       LOGGER.log(Level.SEVERE, "Error posting data", e);
       throw e;
     }
-
+    String responseBody = "";
     try {
       InputStream inputStr;
       if (status < HttpURLConnection.HTTP_BAD_REQUEST) {
@@ -135,14 +135,14 @@ public class ApptuitPutClient {
 
       String encoding = urlConnection.getContentEncoding() == null ? "UTF-8"
           : urlConnection.getContentEncoding();
-      String responseBody = inputStr != null ? consumeResponse(inputStr, Charset.forName(encoding)) : "";
+      responseBody = inputStr != null ? consumeResponse(inputStr, Charset.forName(encoding)) : "";
       debug(responseBody);
-      if (status >= HttpURLConnection.HTTP_BAD_REQUEST) {
-        throw new ResponseStatusException(status, responseBody);
-      }
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Error draining response", e);
       throw e;
+    }
+    if (status >= HttpURLConnection.HTTP_BAD_REQUEST) {
+      throw new ResponseStatusException(status, responseBody);
     }
   }
 
