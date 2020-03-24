@@ -134,7 +134,7 @@ public class ApptuitPutClient {
 
       String encoding = urlConnection.getContentEncoding() == null ? "UTF-8"
           : urlConnection.getContentEncoding();
-      String responseBody = consumeResponse(inputStr, Charset.forName(encoding));
+      String responseBody = inputStr != null ? consumeResponse(inputStr, Charset.forName(encoding)) : "";
       debug(responseBody);
       if (status >= HttpURLConnection.HTTP_BAD_REQUEST) {
         throw new ResponseStatusException(status, responseBody);

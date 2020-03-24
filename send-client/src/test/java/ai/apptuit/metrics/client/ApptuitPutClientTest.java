@@ -30,11 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -145,8 +141,29 @@ public class ApptuitPutClientTest {
   }
 
   @Test
+  public void testSendFakeToken() throws Exception {
+    testSend(401, true, "FAKE_TOKEN");
+  }
+
+  @Test
   public void testSend400() throws Exception {
     testSend(400, true);
+  }
+
+  @Test
+  public void testSend500() throws Exception {
+    testSend(500, true);
+  }
+
+  @Test
+  public void testSendConnectionError() throws MalformedURLException, ParseException {
+    String url = "http://localhost:" + 123 +"/api/put";
+    try {
+      testSend(false, MockServer.token, new URL(url));
+      assert(false);
+    } catch (ConnectException e) {
+      assert(true);
+    }
   }
 
   private void testPut(int status) throws MalformedURLException, ParseException {
@@ -180,17 +197,27 @@ public class ApptuitPutClientTest {
     }
   }
 
-  private void testSend(int status, boolean exceptException) throws MalformedURLException, ParseException {
-    //Util.enableHttpClientTracing();
+  private void testSend(int status, boolean exceptException) throws MalformedURLException, ParseException, ConnectException {
+    testSend(status, exceptException, MockServer.token);
+  }
+
+  private void testSend(int status, boolean exceptException, String token) throws MalformedURLException, ParseException, ConnectException {
+    testSend(exceptException, token, httpServer.getUrl(status));
+  }
+
+  private void testSend(boolean exceptException, String token, URL apiEndPoint) throws ParseException, ConnectException {
+//    Util.enableHttpClientTracing();
 
     int numDataPoints = 10;
     ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
     boolean exceptionOccurred = false;
-    URL apiEndPoint = httpServer.getUrl(status);
-    ApptuitPutClient client = new ApptuitPutClient(MockServer.token, globalTags, apiEndPoint);
+    ApptuitPutClient client = new ApptuitPutClient(token, globalTags, apiEndPoint);
     try {
       client.send(dataPoints, Sanitizer.NO_OP_SANITIZER);
-    } catch (IOException ignored) {
+    } catch (ConnectException c) {
+      throw c;
+    }
+    catch (IOException ignored) {
       exceptionOccurred = true;
     }
     if (exceptException != exceptionOccurred) {
@@ -206,7 +233,7 @@ public class ApptuitPutClientTest {
     Headers headers = exchange.getRequestHeaders();
     assertEquals("gzip", headers.getFirst("Content-Encoding"));
     assertEquals("application/json", headers.getFirst("Content-Type"));
-    assertEquals("Bearer " + MockServer.token, headers.getFirst("Authorization"));
+    assertEquals("Bearer " + token, headers.getFirst("Authorization"));
     assertThat(headers.getFirst("User-Agent"), containsString("metrics-apptuit/1.0-SNAPSHOT Java/"));
 
     DataPoint[] unmarshalledDPs = Util.jsonToDataPoints(requestBodies.get(0));
@@ -243,7 +270,8 @@ public class ApptuitPutClientTest {
     private static final String token = "MOCK_APPTUIT_TOKEN";
     private static final String SUCCESS_RESPONSE_BODY = "{\"success\":1,\"failed\":0,\"errors\":[]}";
     private static final String STATUS400_RESPONSE_BODY = "{\"success\":223,\"failed\":2,\"errors\":[{\"datapoint\":{\"metric\":\"tomcat.requests.duration.mean\",\"timestamp\":1513650393,\"value\":\"NaN\",\"tags\":{\"method\":\"DELETE\",\"context\":\"ROOT\",\"host\":\"ade-instance.c.pivotal-canto-171605.internal\",\"env\":\"dev\",\"collector\":\"jinsight\",\"status\":\"200\"}},\"error\":\"Unable to parse value to a number\"},{\"datapoint\":{\"metric\":\"tomcat.requests.duration.mean\",\"timestamp\":1513650393,\"value\":\"NaN\",\"tags\":{\"method\":\"POST\",\"context\":\"ROOT\",\"host\":\"ade-instance.c.pivotal-canto-171605.internal\",\"env\":\"dev\",\"collector\":\"jinsight\",\"status\":\"200\"}},\"error\":\"Unable to parse value to a number\"}]}";
-
+    private static final String UNAUTHORIZED_RESP_BODY = "Un-Authorized";
+    private static final String STATUS500_RESPONSE_BODY = "{\"success\":223,\"failed\":2,\"errors\":[{\"datapoint\":{\"metric\":\"tomcat.requests.duration.mean\",\"timestamp\":1513650393,\"value\":\"NaN\",\"tags\":{\"method\":\"DELETE\",\"context\":\"ROOT\",\"host\":\"ade-instance.c.pivotal-canto-171605.internal\",\"env\":\"dev\",\"collector\":\"jinsight\",\"status\":\"200\"}},\"error\":\"Unable to parse value to a number\"},{\"datapoint\":{\"metric\":\"tomcat.requests.duration.mean\",\"timestamp\":1513650393,\"value\":\"NaN\",\"tags\":{\"method\":\"POST\",\"context\":\"ROOT\",\"host\":\"ade-instance.c.pivotal-canto-171605.internal\",\"env\":\"dev\",\"collector\":\"jinsight\",\"status\":\"200\"}},\"error\":\"Unable to parse value to a number\"}]}";
     private HttpServer httpServer;
     private List<HttpExchange> exchanges = new ArrayList<>();
     private List<String> requestBodies = new ArrayList<>();
@@ -296,6 +324,12 @@ public class ApptuitPutClientTest {
         case HttpURLConnection.HTTP_BAD_REQUEST:
           response = STATUS400_RESPONSE_BODY.getBytes();
           break;
+        case HttpURLConnection.HTTP_UNAUTHORIZED:
+          response = UNAUTHORIZED_RESP_BODY.getBytes();
+          break;
+        case HttpURLConnection.HTTP_SERVER_ERROR:
+          response = STATUS500_RESPONSE_BODY.getBytes();
+          break;
         default:
           response = SUCCESS_RESPONSE_BODY.getBytes();
           status = HttpURLConnection.HTTP_OK;
@@ -314,6 +348,12 @@ public class ApptuitPutClientTest {
       }
       if ("status=400".equals(rawQuery)) {
         return HttpURLConnection.HTTP_BAD_REQUEST;
+      }
+      if ("status=401".equals(rawQuery)) {
+        return HttpURLConnection.HTTP_UNAUTHORIZED;
+      }
+      if ("status=500".equals(rawQuery)) {
+        return HttpURLConnection.HTTP_SERVER_ERROR;
       }
       return HttpURLConnection.HTTP_OK;
     }
