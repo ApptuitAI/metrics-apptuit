@@ -30,16 +30,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.net.*;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 import org.json.simple.parser.ParseException;
@@ -131,24 +123,69 @@ public class ApptuitPutClientTest {
 
   @Test
   public void testPut200() throws Exception {
-    testPut(200);
+    testMethod(true, 200);
   }
 
   @Test
   public void testPut400() throws Exception {
-    testPut(400);
+    testMethod(true, 400);
   }
 
-  private void testPut(int status) throws MalformedURLException, ParseException {
-    //Util.enableHttpClientTracing();
+  @Test
+  public void testSend200() throws Exception {
+    testMethod(false, 200);
+  }
+
+  @Test
+  public void testSendFakeToken() throws Exception {
+    testMethod(false, 401, "FAKE_TOKEN");
+  }
+
+  @Test
+  public void testSend400() throws Exception {
+    testMethod(false, 400);
+  }
+
+  @Test
+  public void testSend500() throws Exception {
+    testMethod(false, 500);
+  }
+
+  @Test(expected = ConnectException.class)
+  public void testSendConnectionError() throws IOException, ParseException {
+    String url = "http://localhost:" + 123 +"/api/put";
+    testMethod(false, MockServer.token, new URL(url), 200);
+  }
+
+  private void testMethod(boolean put, int status) throws IOException, ParseException {
+    testMethod(put, status, MockServer.token);
+  }
+
+  private void testMethod(boolean put, int status, String token) throws IOException, ParseException {
+    testMethod(put, token, httpServer.getUrl(status), status);
+  }
+
+  private void testMethod(boolean put, String token, URL apiEndPoint, int status) throws ParseException, IOException {
+//    Util.enableHttpClientTracing();
 
     int numDataPoints = 10;
     ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
+    boolean exceptionOccurred = false;
+    ApptuitPutClient client = new ApptuitPutClient(token, globalTags, apiEndPoint);
+    try {
+      if (put) {
+        client.put(dataPoints, Sanitizer.NO_OP_SANITIZER);
+      } else {
+        client.send(dataPoints, Sanitizer.NO_OP_SANITIZER);
+      }
+    } catch (ResponseStatusException rse) {
+      assertEquals(rse.getResponseStatus(), status);
+      return;
+    }
+    validate(numDataPoints, dataPoints, token);
+  }
 
-    URL apiEndPoint = httpServer.getUrl(status);
-    ApptuitPutClient client = new ApptuitPutClient(MockServer.token, globalTags, apiEndPoint);
-    client.put(dataPoints, Sanitizer.NO_OP_SANITIZER);
-
+  private void validate(int numDataPoints, ArrayList<DataPoint> dataPoints, String token) throws ParseException {
     List<HttpExchange> exchanges = httpServer.getExchanges();
     List<String> requestBodies = httpServer.getRequestBodies();
 
@@ -159,7 +196,7 @@ public class ApptuitPutClientTest {
     Headers headers = exchange.getRequestHeaders();
     assertEquals("gzip", headers.getFirst("Content-Encoding"));
     assertEquals("application/json", headers.getFirst("Content-Type"));
-    assertEquals("Bearer " + MockServer.token, headers.getFirst("Authorization"));
+    assertEquals("Bearer " + token, headers.getFirst("Authorization"));
     assertThat(headers.getFirst("User-Agent"), containsString("metrics-apptuit/1.0-SNAPSHOT Java/"));
 
     DataPoint[] unmarshalledDPs = Util.jsonToDataPoints(requestBodies.get(0));
@@ -196,7 +233,8 @@ public class ApptuitPutClientTest {
     private static final String token = "MOCK_APPTUIT_TOKEN";
     private static final String SUCCESS_RESPONSE_BODY = "{\"success\":1,\"failed\":0,\"errors\":[]}";
     private static final String STATUS400_RESPONSE_BODY = "{\"success\":223,\"failed\":2,\"errors\":[{\"datapoint\":{\"metric\":\"tomcat.requests.duration.mean\",\"timestamp\":1513650393,\"value\":\"NaN\",\"tags\":{\"method\":\"DELETE\",\"context\":\"ROOT\",\"host\":\"ade-instance.c.pivotal-canto-171605.internal\",\"env\":\"dev\",\"collector\":\"jinsight\",\"status\":\"200\"}},\"error\":\"Unable to parse value to a number\"},{\"datapoint\":{\"metric\":\"tomcat.requests.duration.mean\",\"timestamp\":1513650393,\"value\":\"NaN\",\"tags\":{\"method\":\"POST\",\"context\":\"ROOT\",\"host\":\"ade-instance.c.pivotal-canto-171605.internal\",\"env\":\"dev\",\"collector\":\"jinsight\",\"status\":\"200\"}},\"error\":\"Unable to parse value to a number\"}]}";
-
+    private static final String UNAUTHORIZED_RESP_BODY = "Un-Authorized";
+    private static final String STATUS500_RESPONSE_BODY = "{\"success\":223,\"failed\":2,\"errors\":[{\"datapoint\":{\"metric\":\"tomcat.requests.duration.mean\",\"timestamp\":1513650393,\"value\":\"NaN\",\"tags\":{\"method\":\"DELETE\",\"context\":\"ROOT\",\"host\":\"ade-instance.c.pivotal-canto-171605.internal\",\"env\":\"dev\",\"collector\":\"jinsight\",\"status\":\"200\"}},\"error\":\"Unable to parse value to a number\"},{\"datapoint\":{\"metric\":\"tomcat.requests.duration.mean\",\"timestamp\":1513650393,\"value\":\"NaN\",\"tags\":{\"method\":\"POST\",\"context\":\"ROOT\",\"host\":\"ade-instance.c.pivotal-canto-171605.internal\",\"env\":\"dev\",\"collector\":\"jinsight\",\"status\":\"200\"}},\"error\":\"Unable to parse value to a number\"}]}";
     private HttpServer httpServer;
     private List<HttpExchange> exchanges = new ArrayList<>();
     private List<String> requestBodies = new ArrayList<>();
@@ -244,10 +282,16 @@ public class ApptuitPutClientTest {
       requestBodies.add(streamToString(exchange.getRequestBody()));
 
       int status = getResponseType(exchange);
-      byte[] response = null;
+      byte[] response;
       switch (status) {
         case HttpURLConnection.HTTP_BAD_REQUEST:
           response = STATUS400_RESPONSE_BODY.getBytes();
+          break;
+        case HttpURLConnection.HTTP_UNAUTHORIZED:
+          response = UNAUTHORIZED_RESP_BODY.getBytes();
+          break;
+        case HttpURLConnection.HTTP_SERVER_ERROR:
+          response = STATUS500_RESPONSE_BODY.getBytes();
           break;
         default:
           response = SUCCESS_RESPONSE_BODY.getBytes();
@@ -267,6 +311,12 @@ public class ApptuitPutClientTest {
       }
       if ("status=400".equals(rawQuery)) {
         return HttpURLConnection.HTTP_BAD_REQUEST;
+      }
+      if ("status=401".equals(rawQuery)) {
+        return HttpURLConnection.HTTP_UNAUTHORIZED;
+      }
+      if ("status=500".equals(rawQuery)) {
+        return HttpURLConnection.HTTP_SERVER_ERROR;
       }
       return HttpURLConnection.HTTP_OK;
     }

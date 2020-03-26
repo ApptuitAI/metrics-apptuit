@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -86,7 +87,7 @@ public class ApptuitPutClient {
     put(dataPoints, DEFAULT_SANITIZER);
   }
 
-  public void put(Collection<DataPoint> dataPoints, Sanitizer sanitizer) {
+  public void send(Collection<DataPoint> dataPoints, Sanitizer sanitizer) throws ConnectException, ResponseStatusException, IOException {
 
     if (dataPoints.isEmpty()) {
       return;
@@ -120,26 +121,42 @@ public class ApptuitPutClient {
     } catch (IOException e) {
       //TODO: Return status to caller, so they can choose to retry etc
       LOGGER.log(Level.SEVERE, "Error posting data", e);
-      return;
+      throw e;
     }
-
+    String responseBody = null;
     try {
-      InputStream inputStr;
-      if (status < HttpURLConnection.HTTP_BAD_REQUEST) {
-        inputStr = urlConnection.getInputStream();
-      } else {
-        /* error from server */
-        inputStr = urlConnection.getErrorStream();
-      }
+      InputStream inputStr = getInputStream(urlConnection, status);
 
       String encoding = urlConnection.getContentEncoding() == null ? "UTF-8"
           : urlConnection.getContentEncoding();
-      String responseBody = consumeResponse(inputStr, Charset.forName(encoding));
+      responseBody = inputStr != null ? consumeResponse(inputStr, Charset.forName(encoding)) : "";
       debug(responseBody);
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Error draining response", e);
+      throw e;
     }
+    if (status >= HttpURLConnection.HTTP_BAD_REQUEST) {
+      throw new ResponseStatusException(status, responseBody);
+    }
+  }
 
+  private InputStream getInputStream(HttpURLConnection urlConnection, int status) throws IOException {
+    InputStream inputStr;
+    if (status < HttpURLConnection.HTTP_BAD_REQUEST) {
+      inputStr = urlConnection.getInputStream();
+    } else {
+      /* error from server */
+      inputStr = urlConnection.getErrorStream();
+    }
+    return inputStr;
+  }
+
+  public void put(Collection<DataPoint> dataPoints, Sanitizer sanitizer){
+    try {
+      send(dataPoints, sanitizer);
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Error sending data", e);
+    }
   }
 
   private void setUserAgent(HttpURLConnection urlConnection) {
@@ -148,7 +165,7 @@ public class ApptuitPutClient {
     urlConnection.setRequestProperty("User-Agent", userAgent);
   }
 
-  private String consumeResponse(InputStream inputStr, Charset encoding) {
+  private String consumeResponse(InputStream inputStr, Charset encoding) throws IOException {
     StringBuilder body = new StringBuilder();
     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStr, encoding));
     try {
@@ -166,6 +183,7 @@ public class ApptuitPutClient {
       }
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Error reading response", e);
+      throw e;
     }
     return body == null ? "Response too long" : body.toString();
   }
