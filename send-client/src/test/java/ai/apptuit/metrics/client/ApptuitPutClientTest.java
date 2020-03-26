@@ -133,43 +133,39 @@ public class ApptuitPutClientTest {
 
   @Test
   public void testSend200() throws Exception {
-    testMethod(false, 200, false);
+    testMethod(false, 200);
   }
 
   @Test
   public void testSendFakeToken() throws Exception {
-    testMethod(false, 401, true, "FAKE_TOKEN");
+    testMethod(false, 401, "FAKE_TOKEN");
   }
 
   @Test
   public void testSend400() throws Exception {
-    testMethod(false, 400, true);
+    testMethod(false, 400);
   }
 
   @Test
   public void testSend500() throws Exception {
-    testMethod(false, 500, true);
+    testMethod(false, 500);
   }
 
   @Test(expected = ConnectException.class)
-  public void testSendConnectionError() throws MalformedURLException, ParseException, ConnectException {
+  public void testSendConnectionError() throws IOException, ParseException {
     String url = "http://localhost:" + 123 +"/api/put";
-    testMethod(false, false, MockServer.token, new URL(url));
+    testMethod(false, MockServer.token, new URL(url), 200);
   }
 
-  private void testMethod(boolean put, int status) throws MalformedURLException, ParseException, ConnectException {
-    testMethod(put, status, false, MockServer.token);
+  private void testMethod(boolean put, int status) throws IOException, ParseException {
+    testMethod(put, status, MockServer.token);
   }
 
-  private void testMethod(boolean put, int status, boolean exceptException) throws MalformedURLException, ParseException, ConnectException {
-    testMethod(put, status, exceptException, MockServer.token);
+  private void testMethod(boolean put, int status, String token) throws IOException, ParseException {
+    testMethod(put, token, httpServer.getUrl(status), status);
   }
 
-  private void testMethod(boolean put, int status, boolean exceptException, String token) throws MalformedURLException, ParseException, ConnectException {
-    testMethod(put, exceptException, token, httpServer.getUrl(status));
-  }
-
-  private void testMethod(boolean put, boolean exceptException, String token, URL apiEndPoint) throws ParseException, ConnectException {
+  private void testMethod(boolean put, String token, URL apiEndPoint, int status) throws ParseException, IOException {
 //    Util.enableHttpClientTracing();
 
     int numDataPoints = 10;
@@ -182,13 +178,10 @@ public class ApptuitPutClientTest {
       } else {
         client.send(dataPoints, Sanitizer.NO_OP_SANITIZER);
       }
-    } catch (ConnectException c) {
-      throw c;
+    } catch (ResponseStatusException rse) {
+      assertEquals(rse.getResponseStatus(), status);
+      return;
     }
-    catch (IOException ignored) {
-      exceptionOccurred = true;
-    }
-    if (exceptException != exceptionOccurred) assertThat("Exception expected", false);
     validate(numDataPoints, dataPoints, token);
   }
 
