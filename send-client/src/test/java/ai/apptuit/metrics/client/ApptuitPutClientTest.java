@@ -123,67 +123,76 @@ public class ApptuitPutClientTest {
 
   @Test
   public void testPut200() throws Exception {
-    testMethod(true, 200);
+    testMethod(0, 200);
   }
 
   @Test
   public void testPut400() throws Exception {
-    testMethod(true, 400);
+    testMethod(0, 400);
   }
 
   @Test
   public void testSend200() throws Exception {
-    testMethod(false, 200);
+    testMethod(1, 200);
   }
 
   @Test
   public void testSendFakeToken() throws Exception {
-    testMethod(false, 401, "FAKE_TOKEN");
+    testMethod(1, 401, "FAKE_TOKEN");
   }
 
   @Test
   public void testSend400() throws Exception {
-    testMethod(false, 400);
+    testMethod(1, 400);
   }
 
   @Test
   public void testSend500() throws Exception {
-    testMethod(false, 500);
+    testMethod(1, 500);
   }
 
   @Test(expected = ConnectException.class)
   public void testSendConnectionError() throws IOException, ParseException {
     String url = "http://localhost:" + 123 +"/api/put";
-    testMethod(false, MockServer.token, new URL(url), 200);
+    testMethod(1, MockServer.token, new URL(url), 200);
   }
 
   @Test
-  public void testSendNoSanitizer() throws IOException {
-    int numDataPoints = 10;
-    ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
-    ApptuitPutClient client = new ApptuitPutClient(MockServer.token, globalTags, httpServer.getUrl(200));
-    client.send(dataPoints);
+  public void testSendWithoutSanitizer500() throws Exception {
+    testMethod(2, 500);
   }
 
-  private void testMethod(boolean put, int status) throws IOException, ParseException {
-    testMethod(put, status, MockServer.token);
+  @Test(expected = ConnectException.class)
+  public void testSendWithoutSanitizerConnectionError() throws IOException, ParseException {
+    String url = "http://localhost:" + 123 +"/api/put";
+    testMethod(2, MockServer.token, new URL(url), 200);
   }
 
-  private void testMethod(boolean put, int status, String token) throws IOException, ParseException {
-    testMethod(put, token, httpServer.getUrl(status), status);
+  private void testMethod(int typeOfMethod, int status) throws IOException, ParseException {
+    testMethod(typeOfMethod, status, MockServer.token);
   }
 
-  private void testMethod(boolean put, String token, URL apiEndPoint, int status) throws ParseException, IOException {
+  private void testMethod(int typeOfMethod, int status, String token) throws IOException, ParseException {
+    testMethod(typeOfMethod, token, httpServer.getUrl(status), status);
+  }
+
+  private void testMethod(int typeOfMethod, String token, URL apiEndPoint, int status) throws ParseException, IOException {
 //    Util.enableHttpClientTracing();
 
     int numDataPoints = 10;
     ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
     ApptuitPutClient client = new ApptuitPutClient(token, globalTags, apiEndPoint);
     try {
-      if (put) {
-        client.put(dataPoints, Sanitizer.NO_OP_SANITIZER);
-      } else {
-        client.send(dataPoints, Sanitizer.NO_OP_SANITIZER);
+      switch (typeOfMethod) {
+        case 0:
+          client.put(dataPoints, Sanitizer.NO_OP_SANITIZER);
+          break;
+        case 1:
+          client.send(dataPoints, Sanitizer.NO_OP_SANITIZER);
+          break;
+        case 2:
+          client.send(dataPoints);
+          break;
       }
     } catch (ResponseStatusException rse) {
       if(status >= 400) {
