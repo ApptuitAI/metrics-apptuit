@@ -34,8 +34,6 @@ services:
 addons:
   sonarcloud:
     organization: "$SONAR_ORG"
-    token:
-      secure: "$SONAR_TOKEN"
 
 cache:
   directories:
@@ -81,7 +79,7 @@ after_success:
 
 deploy:
   - provider: script
-    script: "mvn -s .maven.settings.xml deploy -DskipTests -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dsonar.projectKey=$SONAR_PROJECT"
+    script: "mvn -s .maven.settings.xml deploy -DskipTests -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dsonar.projectKey=${SONAR_PROJECT} -Dsonar.login=${SONAR_TOKEN}"
     skip_cleanup: true
     on:
       tags: true
