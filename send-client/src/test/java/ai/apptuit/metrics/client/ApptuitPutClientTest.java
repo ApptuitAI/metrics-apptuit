@@ -157,6 +157,14 @@ public class ApptuitPutClientTest {
     testMethod(false, MockServer.token, new URL(url), 200);
   }
 
+  @Test
+  public void testSendNoSanitizer() throws IOException {
+    int numDataPoints = 10;
+    ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
+    ApptuitPutClient client = new ApptuitPutClient(MockServer.token, globalTags, httpServer.getUrl(200));
+    client.send(dataPoints);
+  }
+
   private void testMethod(boolean put, int status) throws IOException, ParseException {
     testMethod(put, status, MockServer.token);
   }
@@ -170,7 +178,6 @@ public class ApptuitPutClientTest {
 
     int numDataPoints = 10;
     ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
-    boolean exceptionOccurred = false;
     ApptuitPutClient client = new ApptuitPutClient(token, globalTags, apiEndPoint);
     try {
       if (put) {
@@ -179,7 +186,11 @@ public class ApptuitPutClientTest {
         client.send(dataPoints, Sanitizer.NO_OP_SANITIZER);
       }
     } catch (ResponseStatusException rse) {
-      assertEquals(rse.getResponseStatus(), status);
+      if(status >= 400) {
+        assertEquals(rse.getResponseStatus(), status);
+      } else {
+        throw rse;
+      }
       return;
     }
     validate(numDataPoints, dataPoints, token);
