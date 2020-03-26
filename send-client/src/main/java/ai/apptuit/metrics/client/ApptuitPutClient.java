@@ -83,8 +83,8 @@ public class ApptuitPutClient {
     this.apiEndPoint = (apiEndPoint != null) ? apiEndPoint : DEFAULT_PUT_API_URI;
   }
 
-  public void put(Collection<DataPoint> dataPoints) {
-    put(dataPoints, DEFAULT_SANITIZER);
+  public void send(Collection<DataPoint> dataPoints) throws ConnectException, ResponseStatusException, IOException {
+    send(dataPoints, DEFAULT_SANITIZER);
   }
 
   public void send(Collection<DataPoint> dataPoints, Sanitizer sanitizer) throws ConnectException, ResponseStatusException, IOException {
@@ -129,7 +129,7 @@ public class ApptuitPutClient {
 
       String encoding = urlConnection.getContentEncoding() == null ? "UTF-8"
           : urlConnection.getContentEncoding();
-      responseBody = inputStr != null ? consumeResponse(inputStr, Charset.forName(encoding)) : "";
+      responseBody = inputStr != null ? consumeResponse(inputStr, Charset.forName(encoding)) : null;
       debug(responseBody);
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Error draining response", e);
@@ -151,6 +151,20 @@ public class ApptuitPutClient {
     return inputStr;
   }
 
+  /**
+   * @deprecated There is no way to know if points are successfully put
+   * in this method, so replaced put(...) with send(...)
+   */
+  @Deprecated
+  public void put(Collection<DataPoint> dataPoints) {
+    put(dataPoints, DEFAULT_SANITIZER);
+  }
+
+  /**
+   * @deprecated There is no way to know if points are successfully sent
+   * in this method, so replaced put(...) with send(...)
+   */
+  @Deprecated
   public void put(Collection<DataPoint> dataPoints, Sanitizer sanitizer){
     try {
       send(dataPoints, sanitizer);
