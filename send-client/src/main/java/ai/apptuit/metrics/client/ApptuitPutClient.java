@@ -83,6 +83,10 @@ public class ApptuitPutClient {
     this.apiEndPoint = (apiEndPoint != null) ? apiEndPoint : DEFAULT_PUT_API_URI;
   }
 
+  public void send(Collection<DataPoint> dataPoints) throws ConnectException, ResponseStatusException, IOException {
+    send(dataPoints, DEFAULT_SANITIZER);
+  }
+
   public void send(Collection<DataPoint> dataPoints, Sanitizer sanitizer) throws ConnectException, ResponseStatusException, IOException {
 
     if (dataPoints.isEmpty()) {
@@ -147,11 +151,19 @@ public class ApptuitPutClient {
     return inputStr;
   }
 
+  /**
+   * @deprecated There is no way to know if points are successfully put
+   * in this method, so replaced put(...) with send(...)
+   */
   @Deprecated
   public void put(Collection<DataPoint> dataPoints) {
     put(dataPoints, DEFAULT_SANITIZER);
   }
 
+  /**
+   * @deprecated There is no way to know if points are successfully sent
+   * in this method, so replaced put(...) with send(...)
+   */
   @Deprecated
   public void put(Collection<DataPoint> dataPoints, Sanitizer sanitizer){
     try {
