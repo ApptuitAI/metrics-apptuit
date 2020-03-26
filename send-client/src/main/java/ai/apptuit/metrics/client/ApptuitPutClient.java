@@ -123,15 +123,9 @@ public class ApptuitPutClient {
       LOGGER.log(Level.SEVERE, "Error posting data", e);
       throw e;
     }
-    String responseBody = "";
+    String responseBody = null;
     try {
-      InputStream inputStr;
-      if (status < HttpURLConnection.HTTP_BAD_REQUEST) {
-        inputStr = urlConnection.getInputStream();
-      } else {
-        /* error from server */
-        inputStr = urlConnection.getErrorStream();
-      }
+      InputStream inputStr = getInputStream(urlConnection, status);
 
       String encoding = urlConnection.getContentEncoding() == null ? "UTF-8"
           : urlConnection.getContentEncoding();
@@ -144,6 +138,17 @@ public class ApptuitPutClient {
     if (status >= HttpURLConnection.HTTP_BAD_REQUEST) {
       throw new ResponseStatusException(status, responseBody);
     }
+  }
+
+  private InputStream getInputStream(HttpURLConnection urlConnection, int status) throws IOException {
+    InputStream inputStr;
+    if (status < HttpURLConnection.HTTP_BAD_REQUEST) {
+      inputStr = urlConnection.getInputStream();
+    } else {
+      /* error from server */
+      inputStr = urlConnection.getErrorStream();
+    }
+    return inputStr;
   }
 
   public void put(Collection<DataPoint> dataPoints, Sanitizer sanitizer){
