@@ -30,6 +30,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Iterator;
@@ -149,7 +150,7 @@ public class ApptuitPutClient {
 
   private String generateAuthHeader() {
     if (userId != null && !userId.isEmpty()) {
-      return "Basic " + Base64.getEncoder().encodeToString((userId + ":" + token).getBytes());
+      return "Basic " + Base64.getEncoder().encodeToString((userId + ":" + token).getBytes(StandardCharsets.UTF_8));
     }
     return "Bearer " + token;
   }
