@@ -30,6 +30,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -72,6 +73,7 @@ public class ApptuitPutClient {
 
   private Map<String, String> globalTags;
   private String token;
+  private String userId;
 
   public ApptuitPutClient(String token, Map<String, String> globalTags) {
     this(token, globalTags, null);
@@ -81,6 +83,11 @@ public class ApptuitPutClient {
     this.globalTags = globalTags;
     this.token = token;
     this.apiEndPoint = (apiEndPoint != null) ? apiEndPoint : DEFAULT_PUT_API_URI;
+  }
+
+  public ApptuitPutClient(String userId, String token, Map<String, String> globalTags, URL apiEndPoint) {
+    this(token, globalTags, apiEndPoint);
+    this.userId = userId;
   }
 
   public void send(Collection<DataPoint> dataPoints) throws ConnectException, ResponseStatusException, IOException {
@@ -108,7 +115,7 @@ public class ApptuitPutClient {
       if (GZIP) {
         urlConnection.setRequestProperty(CONTENT_ENCODING, CONTENT_ENCODING_GZIP);
       }
-      urlConnection.setRequestProperty("Authorization", "Bearer " + token);
+      urlConnection.setRequestProperty("Authorization", generateAuthHeader());
       urlConnection.setRequestMethod("POST");
       urlConnection.setDoInput(true);
       urlConnection.setDoOutput(true);
@@ -138,6 +145,13 @@ public class ApptuitPutClient {
     if (status >= HttpURLConnection.HTTP_BAD_REQUEST) {
       throw new ResponseStatusException(status, responseBody);
     }
+  }
+
+  private String generateAuthHeader() {
+    if (userId != null && !userId.isEmpty()) {
+      return "Basic " + Base64.getEncoder().encodeToString((userId + ":" + token).getBytes());
+    }
+    return "Bearer " + token;
   }
 
   private InputStream getInputStream(HttpURLConnection urlConnection, int status) throws IOException {
