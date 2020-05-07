@@ -158,6 +158,33 @@ public class ApptuitPutClientTest {
   }
 
   @Test
+  public void testSendWithBasicAuth() throws IOException, ParseException {
+    ApptuitPutClient putClient = new ApptuitPutClient(MockServer.userId, MockServer.token, globalTags, httpServer.getUrl());
+    testAuth(putClient, "Basic");
+  }
+
+  @Test
+  public void testSendWithBearerAuth() throws ParseException, IOException {
+    ApptuitPutClient putClient = new ApptuitPutClient(MockServer.token, globalTags, httpServer.getUrl());
+    testAuth(putClient,"Bearer");
+  }
+
+  private void testAuth(ApptuitPutClient putClient, String authType) throws IOException, ParseException {
+    ArrayList<DataPoint> dataPoints = createDataPoints(10);
+    putClient.send(dataPoints, Sanitizer.NO_OP_SANITIZER);
+    String expectedAuthHeader;
+    if (authType.equals("Basic")) {
+      expectedAuthHeader =
+          "Basic " + Base64.getEncoder().encodeToString((MockServer.userId + ":" + MockServer.token).getBytes());
+    } else if (authType.equals("Bearer")) {
+      expectedAuthHeader = "Bearer " + MockServer.token;
+    } else {
+      throw new IllegalStateException("Unexpected auth type " + authType);
+    }
+    validate(10, dataPoints, expectedAuthHeader);
+  }
+
+  @Test
   public void testSendWithoutSanitizer500() throws Exception {
     testMethod(2, 500);
   }
@@ -202,10 +229,10 @@ public class ApptuitPutClientTest {
       }
       return;
     }
-    validate(numDataPoints, dataPoints, token);
+    validate(numDataPoints, dataPoints, "Bearer " + token);
   }
 
-  private void validate(int numDataPoints, ArrayList<DataPoint> dataPoints, String token) throws ParseException {
+  private void validate(int numDataPoints, ArrayList<DataPoint> dataPoints, String expectedAuthHeader) throws ParseException {
     List<HttpExchange> exchanges = httpServer.getExchanges();
     List<String> requestBodies = httpServer.getRequestBodies();
 
@@ -216,7 +243,7 @@ public class ApptuitPutClientTest {
     Headers headers = exchange.getRequestHeaders();
     assertEquals("gzip", headers.getFirst("Content-Encoding"));
     assertEquals("application/json", headers.getFirst("Content-Type"));
-    assertEquals("Bearer " + token, headers.getFirst("Authorization"));
+    assertEquals(expectedAuthHeader, headers.getFirst("Authorization"));
     assertThat(headers.getFirst("User-Agent"), containsString("metrics-apptuit/1.0-SNAPSHOT Java/"));
 
     DataPoint[] unmarshalledDPs = Util.jsonToDataPoints(requestBodies.get(0));
@@ -255,6 +282,7 @@ public class ApptuitPutClientTest {
     private static final String STATUS400_RESPONSE_BODY = "{\"success\":223,\"failed\":2,\"errors\":[{\"datapoint\":{\"metric\":\"tomcat.requests.duration.mean\",\"timestamp\":1513650393,\"value\":\"NaN\",\"tags\":{\"method\":\"DELETE\",\"context\":\"ROOT\",\"host\":\"ade-instance.c.pivotal-canto-171605.internal\",\"env\":\"dev\",\"collector\":\"jinsight\",\"status\":\"200\"}},\"error\":\"Unable to parse value to a number\"},{\"datapoint\":{\"metric\":\"tomcat.requests.duration.mean\",\"timestamp\":1513650393,\"value\":\"NaN\",\"tags\":{\"method\":\"POST\",\"context\":\"ROOT\",\"host\":\"ade-instance.c.pivotal-canto-171605.internal\",\"env\":\"dev\",\"collector\":\"jinsight\",\"status\":\"200\"}},\"error\":\"Unable to parse value to a number\"}]}";
     private static final String UNAUTHORIZED_RESP_BODY = "Un-Authorized";
     private static final String STATUS500_RESPONSE_BODY = "{\"success\":223,\"failed\":2,\"errors\":[{\"datapoint\":{\"metric\":\"tomcat.requests.duration.mean\",\"timestamp\":1513650393,\"value\":\"NaN\",\"tags\":{\"method\":\"DELETE\",\"context\":\"ROOT\",\"host\":\"ade-instance.c.pivotal-canto-171605.internal\",\"env\":\"dev\",\"collector\":\"jinsight\",\"status\":\"200\"}},\"error\":\"Unable to parse value to a number\"},{\"datapoint\":{\"metric\":\"tomcat.requests.duration.mean\",\"timestamp\":1513650393,\"value\":\"NaN\",\"tags\":{\"method\":\"POST\",\"context\":\"ROOT\",\"host\":\"ade-instance.c.pivotal-canto-171605.internal\",\"env\":\"dev\",\"collector\":\"jinsight\",\"status\":\"200\"}},\"error\":\"Unable to parse value to a number\"}]}";
+    private static final String userId = "foo";
     private HttpServer httpServer;
     private List<HttpExchange> exchanges = new ArrayList<>();
     private List<String> requestBodies = new ArrayList<>();
