@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
@@ -175,7 +176,8 @@ public class ApptuitPutClientTest {
     String expectedAuthHeader;
     if (authType.equals("Basic")) {
       expectedAuthHeader =
-          "Basic " + Base64.getEncoder().encodeToString((MockServer.userId + ":" + MockServer.token).getBytes());
+          "Basic " + Base64.getEncoder().encodeToString((MockServer.userId + ":" + MockServer.token).getBytes(
+              StandardCharsets.UTF_8));
     } else if (authType.equals("Bearer")) {
       expectedAuthHeader = "Bearer " + MockServer.token;
     } else {
