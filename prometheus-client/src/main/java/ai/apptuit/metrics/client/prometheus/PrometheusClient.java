@@ -58,6 +58,7 @@ public class PrometheusClient {
     }
   }
 
+  private String userId;
   private final String token;
   private final URL prometheusEndpoint;
 
@@ -66,6 +67,11 @@ public class PrometheusClient {
   }
 
   public PrometheusClient(String token, URL prometheusEndpoint) {
+    this(null, token, prometheusEndpoint);
+  }
+
+  public PrometheusClient(String userId, String token, URL prometheusEndpoint) {
+    this.userId = userId;
     this.token = token;
     this.prometheusEndpoint = prometheusEndpoint;
   }
@@ -130,9 +136,12 @@ public class PrometheusClient {
   }
 
   private String getAuthHeader() {
-    // return "Bearer " + token;
-    byte[] userPass = (token + ":" + token).getBytes(StandardCharsets.UTF_8);
-    return "Basic " + Base64.getEncoder().encodeToString(userPass);
+    if (userId == null) {
+      return "Bearer " + token;
+    } else {
+      byte[] userPass = (userId + ":" + token).getBytes(StandardCharsets.UTF_8);
+      return "Basic " + Base64.getEncoder().encodeToString(userPass);
+    }
   }
 
   static long getStepSize(long queryRangeMillis) {
