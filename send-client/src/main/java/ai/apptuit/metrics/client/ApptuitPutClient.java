@@ -25,10 +25,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -71,6 +74,7 @@ public class ApptuitPutClient {
 
   private Map<String, String> globalTags;
   private String token;
+  private String userId;
 
   public ApptuitPutClient(String token, Map<String, String> globalTags) {
     this(token, globalTags, null);
@@ -82,11 +86,16 @@ public class ApptuitPutClient {
     this.apiEndPoint = (apiEndPoint != null) ? apiEndPoint : DEFAULT_PUT_API_URI;
   }
 
-  public void put(Collection<DataPoint> dataPoints) {
-    put(dataPoints, DEFAULT_SANITIZER);
+  public ApptuitPutClient(String userId, String token, Map<String, String> globalTags, URL apiEndPoint) {
+    this(token, globalTags, apiEndPoint);
+    this.userId = userId;
   }
 
-  public void put(Collection<DataPoint> dataPoints, Sanitizer sanitizer) {
+  public void send(Collection<DataPoint> dataPoints) throws ConnectException, ResponseStatusException, IOException {
+    send(dataPoints, DEFAULT_SANITIZER);
+  }
+
+  public void send(Collection<DataPoint> dataPoints, Sanitizer sanitizer) throws ConnectException, ResponseStatusException, IOException {
 
     if (dataPoints.isEmpty()) {
       return;
@@ -107,7 +116,7 @@ public class ApptuitPutClient {
       if (GZIP) {
         urlConnection.setRequestProperty(CONTENT_ENCODING, CONTENT_ENCODING_GZIP);
       }
-      urlConnection.setRequestProperty("Authorization", "Bearer " + token);
+      urlConnection.setRequestProperty("Authorization", generateAuthHeader());
       urlConnection.setRequestMethod("POST");
       urlConnection.setDoInput(true);
       urlConnection.setDoOutput(true);
@@ -120,26 +129,63 @@ public class ApptuitPutClient {
     } catch (IOException e) {
       //TODO: Return status to caller, so they can choose to retry etc
       LOGGER.log(Level.SEVERE, "Error posting data", e);
-      return;
+      throw e;
     }
-
+    String responseBody = null;
     try {
-      InputStream inputStr;
-      if (status < HttpURLConnection.HTTP_BAD_REQUEST) {
-        inputStr = urlConnection.getInputStream();
-      } else {
-        /* error from server */
-        inputStr = urlConnection.getErrorStream();
-      }
+      InputStream inputStr = getInputStream(urlConnection, status);
 
       String encoding = urlConnection.getContentEncoding() == null ? "UTF-8"
           : urlConnection.getContentEncoding();
-      String responseBody = consumeResponse(inputStr, Charset.forName(encoding));
+      responseBody = inputStr != null ? consumeResponse(inputStr, Charset.forName(encoding)) : null;
       debug(responseBody);
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Error draining response", e);
+      throw e;
     }
+    if (status >= HttpURLConnection.HTTP_BAD_REQUEST) {
+      throw new ResponseStatusException(status, responseBody);
+    }
+  }
 
+  private String generateAuthHeader() {
+    if (userId != null && !userId.isEmpty()) {
+      return "Basic " + Base64.getEncoder().encodeToString((userId + ":" + token).getBytes(StandardCharsets.UTF_8));
+    }
+    return "Bearer " + token;
+  }
+
+  private InputStream getInputStream(HttpURLConnection urlConnection, int status) throws IOException {
+    InputStream inputStr;
+    if (status < HttpURLConnection.HTTP_BAD_REQUEST) {
+      inputStr = urlConnection.getInputStream();
+    } else {
+      /* error from server */
+      inputStr = urlConnection.getErrorStream();
+    }
+    return inputStr;
+  }
+
+  /**
+   * @deprecated There is no way to know if points are successfully put
+   * in this method, so replaced put(...) with send(...)
+   */
+  @Deprecated
+  public void put(Collection<DataPoint> dataPoints) {
+    put(dataPoints, DEFAULT_SANITIZER);
+  }
+
+  /**
+   * @deprecated There is no way to know if points are successfully sent
+   * in this method, so replaced put(...) with send(...)
+   */
+  @Deprecated
+  public void put(Collection<DataPoint> dataPoints, Sanitizer sanitizer){
+    try {
+      send(dataPoints, sanitizer);
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Error sending data", e);
+    }
   }
 
   private void setUserAgent(HttpURLConnection urlConnection) {
@@ -148,7 +194,7 @@ public class ApptuitPutClient {
     urlConnection.setRequestProperty("User-Agent", userAgent);
   }
 
-  private String consumeResponse(InputStream inputStr, Charset encoding) {
+  private String consumeResponse(InputStream inputStr, Charset encoding) throws IOException {
     StringBuilder body = new StringBuilder();
     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStr, encoding));
     try {
@@ -166,6 +212,7 @@ public class ApptuitPutClient {
       }
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Error reading response", e);
+      throw e;
     }
     return body == null ? "Response too long" : body.toString();
   }
