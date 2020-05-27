@@ -28,6 +28,7 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.function.Consumer;
 import java.util.zip.GZIPInputStream;
 
 import static ai.apptuit.metrics.client.prometheus.PrometheusClient.API_V_1_QUERY_RANGE;
@@ -52,9 +53,18 @@ public class PrometheusClientTest {
   }
 
   @Test
-  public void testBasicQuery() throws Exception {
-    URL url = httpServer.getUrl();
-    PrometheusClient client = new PrometheusClient(MockServer.TOKEN, url);
+  public void testBearerAuthQuery() throws Exception {
+    PrometheusClient client = new PrometheusClient(MockServer.TOKEN, httpServer.getUrl());
+    testQueryRange(client, (authorizationHeader) -> assertEquals(MockServer.BEARER_AUTH_HEADER, authorizationHeader));
+  }
+
+  @Test
+  public void testBasicAuthQuery() throws Exception {
+    PrometheusClient client = new PrometheusClient(MockServer.USER_ID, MockServer.TOKEN, httpServer.getUrl());
+    testQueryRange(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader));
+  }
+
+  private void testQueryRange(PrometheusClient client, Consumer<String> authHeaderValidator) throws IOException, ResponseStatusException, URISyntaxException {
     long end = System.currentTimeMillis();
     long start = end - 300000;
     QueryResponse queryResponse = client.query(start, end, "MOCK QUERY");
@@ -66,7 +76,7 @@ public class PrometheusClientTest {
     assertEquals("/" + API_V_1_QUERY_RANGE, exchange.getRequestURI().getPath());
     assertEquals("POST", exchange.getRequestMethod());
     String authorizationHeader = exchange.getRequestHeaders().getFirst("Authorization");
-    assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader);
+    authHeaderValidator.accept(authorizationHeader);
 
     List<String> bodies = httpServer.getRequestBodies();
     assertEquals(1, bodies.size());
@@ -131,8 +141,10 @@ public class PrometheusClientTest {
 
     private static final int port = 9797;
     private static final String path = API_V_1_QUERY_RANGE;
+    public static final String USER_ID = "MOCK_USER_ID";
     private static final String TOKEN = "MOCK_APPTUIT_TOKEN";
-    private static final String BASIC_AUTH_HEADER = "Basic TU9DS19BUFBUVUlUX1RPS0VOOk1PQ0tfQVBQVFVJVF9UT0tFTg==";
+    private static final String BASIC_AUTH_HEADER = "Basic TU9DS19VU0VSX0lEOk1PQ0tfQVBQVFVJVF9UT0tFTg==";
+    private static final String BEARER_AUTH_HEADER = "Bearer " + TOKEN;
 
     private HttpServer httpServer;
     private List<HttpExchange> exchanges = new ArrayList<>();
@@ -178,7 +190,7 @@ public class PrometheusClientTest {
       requestBodies.add(streamToString(exchange.getRequestBody()));
 
       String authorizationHeader = exchange.getRequestHeaders().getFirst("Authorization");
-      if (!BASIC_AUTH_HEADER.equals(authorizationHeader)) {
+      if (!BASIC_AUTH_HEADER.equals(authorizationHeader) && !BEARER_AUTH_HEADER.equals(authorizationHeader)) {
         sendResponse(exchange, HttpURLConnection.HTTP_UNAUTHORIZED, "query-result-warnings.json");
         return;
       }
