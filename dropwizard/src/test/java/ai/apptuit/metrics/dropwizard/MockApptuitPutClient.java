@@ -50,7 +50,7 @@ public class MockApptuitPutClient extends BaseMockClient {
       Object[] args = invocation.getArguments();
       getInstance().notifyListeners(getDataPoints(args));
       return null;
-    }).when(mockPutClient).put(anyCollectionOf(DataPoint.class), any(Sanitizer.class));
+    }).when(mockPutClient).send(anyCollectionOf(DataPoint.class), any(Sanitizer.class));
 
   }
 

@@ -23,6 +23,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -30,8 +31,10 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.awaitility.Awaitility.await;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Rajiv Shivane
@@ -68,6 +71,37 @@ public class ApptuitReporterFactoryTest extends BaseReporterTest {
       await().atMost(period * 15, TimeUnit.SECONDS).until(awaitUntil);
       mockClient.removePutListener(listener);
     }
+  }
+
+  @Test
+  public void testErrorHandler() throws Exception {
+
+    ApptuitReporterFactory factory = new ApptuitReporterFactory();
+    factory.setRateUnit(TimeUnit.SECONDS);
+    factory.setDurationUnit(TimeUnit.MILLISECONDS);
+    factory.addGlobalTag("globalTag1", "globalValue1");
+    factory.setReportingMode(ReportingMode.API_PUT);
+    factory.setApiKey("dummy");
+
+    factory.setSanitizer(Sanitizer.NO_OP_SANITIZER);
+    assertEquals(Sanitizer.NO_OP_SANITIZER, factory.getSanitizer());
+
+    AtomicBoolean gotError = new AtomicBoolean(false);
+    SendErrorHandler errorHandler = e -> gotError.set(true);
+    factory.setErrorHandler(errorHandler);
+    assertEquals(errorHandler, factory.getErrorHandler());
+
+    try (ScheduledReporter reporter = factory.build(registry)) {
+      reporter.start(period, TimeUnit.SECONDS);
+      await().atMost(period * 15, TimeUnit.SECONDS).until(gotError::get);
+    }
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testMalformedUrl() throws Exception {
+    ApptuitReporterFactory factory = new ApptuitReporterFactory();
+    factory.setApiUrl("dummy://cause.failure");
+    factory.build(registry);
   }
 
   private ScheduledReporter createReporter(ReportingMode mode) {
