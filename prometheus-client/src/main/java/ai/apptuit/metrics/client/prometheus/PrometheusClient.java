@@ -163,6 +163,6 @@ public class PrometheusClient {
       }
       lowerStep = predefinedStep;
     }
-    return lowerStep * (step / lowerStep) ;
+    return lowerStep * (step / lowerStep);
   }
 }
