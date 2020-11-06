@@ -62,11 +62,18 @@ public class PrometheusClientTest {
   public void testBasicAuthQuery() throws Exception {
     PrometheusClient client = new PrometheusClient(MockServer.USER_ID, MockServer.TOKEN, httpServer.getUrl());
     testQueryRange(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader));
+    tearDown();
+    testStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader));
+    tearDown();
+    testUnauthorizedStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader), 0);
+    tearDown();
+    testUnauthorizedStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader), -10);
+
   }
 
   private void testQueryRange(PrometheusClient client, Consumer<String> authHeaderValidator) throws IOException, ResponseStatusException, URISyntaxException {
     long end = System.currentTimeMillis();
-    long start = end - 300000;
+    long start = end - 5 * 60 * 1000;
     QueryResponse queryResponse = client.query(start, end, "MOCK QUERY");
     assertNotNull(queryResponse);
 
@@ -100,6 +107,66 @@ public class PrometheusClientTest {
     assertTrue(tuple.getTimestamp() >= 1570573740000L && tuple.getTimestamp() <= 1570577325000L);
     assertNotNull(tuple.getValue());
     assertEquals(Long.valueOf(tuple.getValue()), (Long) tuple.getValueAsLong());
+  }
+
+  private void testStepSize(PrometheusClient client, Consumer<String> authHeaderValidator) throws IOException, ResponseStatusException, URISyntaxException {
+    long end = System.currentTimeMillis();
+    long start = end - 5 * 60 * 1000;
+    long stepSizeSeconds = 15 ;
+    QueryResponse queryResponse = client.query(start, end, "MOCK QUERY", stepSizeSeconds);;
+    assertNotNull(queryResponse);
+
+    List<HttpExchange> exchanges = httpServer.getExchanges();
+    assertEquals(1, exchanges.size());
+    HttpExchange exchange = exchanges.get(0);
+    assertEquals("/" + API_V_1_QUERY_RANGE, exchange.getRequestURI().getPath());
+    assertEquals("POST", exchange.getRequestMethod());
+    String authorizationHeader = exchange.getRequestHeaders().getFirst("Authorization");
+    authHeaderValidator.accept(authorizationHeader);
+
+    List<String> bodies = httpServer.getRequestBodies();
+    assertEquals(1, bodies.size());
+    String body = bodies.get(0);
+    assertTrue(body.matches("^start=" + (start / 1000) + "&end=" + (end / 1000) + "&step="+ stepSizeSeconds +"+&query=MOCK\\+QUERY$"));
+
+    //Additional validation of response
+    assertNull(queryResponse.getError());
+    assertNull(queryResponse.getErrorType());
+    assertEquals(0, queryResponse.getWarnings().size());
+    assertEquals(AbstractResponse.STATUS.success, queryResponse.getStatus());
+    QueryResult result = queryResponse.getResult();
+    assertNotNull(result);
+    assertEquals(QueryResult.TYPE.matrix, result.getType());
+    List<TimeSeries> series = ((MatrixResult) result).getSeries();
+    assertEquals(20, series.size());
+    TimeSeries ts = series.get(0);
+    assertEquals(7, ts.getLabels().size());
+    assertEquals(1196, ts.getValues().size());
+    TimeSeries.Tuple tuple = ts.getValues().get(0);
+    assertTrue(tuple.getTimestamp() >= 1570573740000L && tuple.getTimestamp() <= 1570577325000L);
+    assertNotNull(tuple.getValue());
+    assertEquals(Long.valueOf(tuple.getValue()), (Long) tuple.getValueAsLong());
+  }
+
+  private void testUnauthorizedStepSize(PrometheusClient client, Consumer<String> authHeaderValidator, long stepSizeSeconds) throws IOException, ResponseStatusException, URISyntaxException {
+    long end = System.currentTimeMillis();
+    long start = end - 5 * 60 * 1000;
+    QueryResponse queryResponse = client.query(start, end, "MOCK QUERY", stepSizeSeconds);
+    assertNotNull(queryResponse);
+    List<HttpExchange> exchanges = httpServer.getExchanges();
+    assertEquals(1, exchanges.size());
+    HttpExchange exchange = exchanges.get(0);
+    assertEquals("/" + API_V_1_QUERY_RANGE, exchange.getRequestURI().getPath());
+    assertEquals("POST", exchange.getRequestMethod());
+    String authorizationHeader = exchange.getRequestHeaders().getFirst("Authorization");
+    authHeaderValidator.accept(authorizationHeader);
+    List<String> bodies = httpServer.getRequestBodies();
+    assertEquals(1, bodies.size());
+    String body = bodies.get(0);
+    assertEquals("zero or negative query resolution step widths are not accepted. Try a positive integer",queryResponse.getError());
+    assertEquals("bad_data",queryResponse.getErrorType());
+    assertEquals(AbstractResponse.STATUS.error, queryResponse.getStatus());
+    assertNull(queryResponse.getResult());
   }
 
   @Test(expected = ResponseStatusException.class)
@@ -192,6 +259,10 @@ public class PrometheusClientTest {
       String authorizationHeader = exchange.getRequestHeaders().getFirst("Authorization");
       if (!BASIC_AUTH_HEADER.equals(authorizationHeader) && !BEARER_AUTH_HEADER.equals(authorizationHeader)) {
         sendResponse(exchange, HttpURLConnection.HTTP_UNAUTHORIZED, "query-result-warnings.json");
+        return;
+      }
+      if (requestBodies.get(0).matches("^start=[0-9]\\d*&end=[0-9]\\d*&step=(0|(-[1-9]\\d*))&query=MOCK\\+QUERY$")){
+        sendResponse(exchange, HttpURLConnection.HTTP_OK, "query-result-unauthorised-step.json");
         return;
       }
       sendResponse(exchange, HttpURLConnection.HTTP_OK, "query-result-basic.json");
