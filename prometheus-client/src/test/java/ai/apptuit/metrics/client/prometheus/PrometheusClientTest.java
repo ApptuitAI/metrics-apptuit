@@ -113,7 +113,7 @@ public class PrometheusClientTest {
     long end = System.currentTimeMillis();
     long start = end - 5 * 60 * 1000;
     long stepSizeSeconds = 15 ;
-    QueryResponse queryResponse = client.query(start, end, "MOCK QUERY", stepSizeSeconds);;
+    QueryResponse queryResponse = client.query(start, end, "MOCK QUERY", stepSizeSeconds);
     assertNotNull(queryResponse);
 
     List<HttpExchange> exchanges = httpServer.getExchanges();
@@ -163,6 +163,7 @@ public class PrometheusClientTest {
     List<String> bodies = httpServer.getRequestBodies();
     assertEquals(1, bodies.size());
     String body = bodies.get(0);
+    assertTrue(body.matches("^start=" + (start / 1000) + "&end=" + (end / 1000) + "&step="+ stepSizeSeconds +"+&query=MOCK\\+QUERY$"));
     assertEquals("zero or negative query resolution step widths are not accepted. Try a positive integer",queryResponse.getError());
     assertEquals("bad_data",queryResponse.getErrorType());
     assertEquals(AbstractResponse.STATUS.error, queryResponse.getStatus());
