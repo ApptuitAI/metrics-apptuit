@@ -142,8 +142,8 @@ public class PrometheusClient {
 
   static URL completeTrailingSlashURL(URL url) throws URISyntaxException, MalformedURLException {
     String urlPath = url.toURI().toString();
-    urlPath = urlPath.endsWith("/") ? urlPath : (urlPath + "/");
-    return new URL(urlPath);
+    url = urlPath.endsWith("/") ? url : new URL(urlPath + "/");
+    return url;
   }
 
   private String getAuthHeader() {
