@@ -76,8 +76,13 @@ public class PrometheusClient {
     this.prometheusEndpoint = prometheusEndpoint;
   }
 
-  @SuppressFBWarnings(value = "SF_SWITCH_NO_DEFAULT", justification = "Findbugs limitation https://sourceforge.net/p/findbugs/bugs/1298/")
   public QueryResponse query(long startEpochMillis, long endEpochMillis, String promQueryString)
+          throws IOException, ResponseStatusException, URISyntaxException {
+    return query(startEpochMillis, endEpochMillis, promQueryString, getStepSize(endEpochMillis - startEpochMillis) * 1000);
+  }
+
+  @SuppressFBWarnings(value = "SF_SWITCH_NO_DEFAULT", justification = "Findbugs limitation https://sourceforge.net/p/findbugs/bugs/1298/")
+  public QueryResponse query(long startEpochMillis, long endEpochMillis, String promQueryString, long stepSizeMillis)
       throws IOException, ResponseStatusException, URISyntaxException {
 
     URL queryEndpoint = prometheusEndpoint.toURI().resolve(API_V_1_QUERY_RANGE).toURL();
@@ -91,7 +96,7 @@ public class PrometheusClient {
 
     String urlParameters = "start=" + (startEpochMillis / 1000)
         + "&end=" + (endEpochMillis / 1000)
-        + "&step=" + getStepSize(endEpochMillis - startEpochMillis)
+        + "&step=" + (stepSizeMillis / 1000)
         + "&query=" + URLEncoder.encode(promQueryString, "UTF-8");
 
     urlConnection.setDoOutput(true);
