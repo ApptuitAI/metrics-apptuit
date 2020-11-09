@@ -47,7 +47,7 @@ public class ApptuitPutClient {
 
   private static final Logger LOGGER = Logger.getLogger(ApptuitPutClient.class.getName());
 
-  private static final boolean DEBUG = true;
+  private static final boolean DEBUG = false;
   private static final boolean GZIP = true;
 
   private static final int BUFFER_SIZE = 8 * 1024;
@@ -127,8 +127,6 @@ public class ApptuitPutClient {
       status = urlConnection.getResponseCode();
       debug("-------------------" + status + "---------------------");
     } catch (IOException e) {
-      //TODO: Return status to caller, so they can choose to retry etc
-      LOGGER.log(Level.SEVERE, "Error posting data", e);
       throw e;
     }
     String responseBody = null;
@@ -140,8 +138,7 @@ public class ApptuitPutClient {
       responseBody = inputStr != null ? consumeResponse(inputStr, Charset.forName(encoding)) : null;
       debug(responseBody);
     } catch (IOException e) {
-      LOGGER.log(Level.SEVERE, "Error draining response", e);
-      throw e;
+      throw new IOException("Error draining response", e);
     }
     if (status >= HttpURLConnection.HTTP_BAD_REQUEST) {
       throw new ResponseStatusException(status, responseBody);

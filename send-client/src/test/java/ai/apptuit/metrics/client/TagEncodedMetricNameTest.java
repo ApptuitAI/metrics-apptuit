@@ -16,16 +16,15 @@
 
 package ai.apptuit.metrics.client;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import ai.apptuit.metrics.client.TagEncodedMetricName;
-import org.junit.Before;
-import org.junit.Test;
+import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Rajiv Shivane
@@ -77,6 +76,25 @@ public class TagEncodedMetricNameTest {
   @Test(expected = IllegalArgumentException.class)
   public void testMissingTagValueFails() throws Exception {
     TagEncodedMetricName.decode("asdf[k:0, k27:]");
+  }
+
+  @Test
+  public void testTrailingCommaIsOk() throws Exception {
+    TagEncodedMetricName t = TagEncodedMetricName.decode("asdf[k:0, ]");
+    TagEncodedMetricName decoded = TagEncodedMetricName.decode("asdf").withTags("k", "0");
+    assertEquals(t, decoded);
+  }
+
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testMissingTagValueQuoteFails() throws Exception {
+    TagEncodedMetricName.decode("asdf[k:0, k27:\"]");
+  }
+
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testEmptyQuotedTagValueFails() throws Exception {
+    TagEncodedMetricName.decode("asdf[k:0, k27:\"\"]");
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -154,4 +172,40 @@ public class TagEncodedMetricNameTest {
         .withTags("k1", "v1");
     assertEquals(t1.toString(), t2.toString());
   }
+
+  @Test
+  public void testQuotesInTagValue() throws Exception {
+    String val = "Quoted\"Value\"";
+    String decodedVal = encodeAndDecodeTagValue(val);
+    assertEquals(val, decodedVal);
+  }
+
+  @Test
+  public void testCommaInTagValue() throws Exception {
+    String val = "Comma, separated, value";
+    String decodedVal = encodeAndDecodeTagValue(val);
+    assertEquals(val, decodedVal);
+  }
+
+  @Test
+  public void testColonInTagValue() throws Exception {
+    String val = "colon:value";
+    String decodedVal = encodeAndDecodeTagValue(val);
+    assertEquals(val, decodedVal);
+  }
+
+  private String encodeAndDecodeTagValue(String val) {
+    String key = "key";
+    TagEncodedMetricName t = encodedMetricName.withTags(key, val);
+    TagEncodedMetricName decoded = TagEncodedMetricName.decode(t.toString());
+    return decoded.getTags().get(key);
+  }
+
+  @Test
+  public void testQuotedUnquotedValues() {
+    TagEncodedMetricName t = encodedMetricName.withTags("a", "b").withTags("q", "r,s,t");
+    TagEncodedMetricName decoded = TagEncodedMetricName.decode(t.toString());
+    assertEquals(t, decoded);
+  }
+
 }

@@ -26,6 +26,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.Timer;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
@@ -55,9 +56,10 @@ public class ApptuitReporter extends ScheduledReporter {
   protected ApptuitReporter(MetricRegistry registry, MetricFilter filter, TimeUnit rateUnit,
                             TimeUnit durationUnit, Map<String, String> globalTags,
                             String key, URL apiUrl,
-                            ReportingMode reportingMode, Sanitizer sanitizer) {
+                            ReportingMode reportingMode, Sanitizer sanitizer,
+                            SendErrorHandler errorHandler) {
     this(registry, filter, rateUnit, durationUnit,
-        getDataPointSender(globalTags, key, apiUrl, reportingMode, sanitizer));
+        getDataPointSender(globalTags, key, apiUrl, reportingMode, sanitizer, errorHandler));
   }
 
   protected ApptuitReporter(MetricRegistry registry, MetricFilter filter, TimeUnit rateUnit,
@@ -72,7 +74,8 @@ public class ApptuitReporter extends ScheduledReporter {
   }
 
   private static DataPointsSender getDataPointSender(Map<String, String> globalTags, String key, URL apiUrl,
-                                                     ReportingMode reportingMode, Sanitizer sanitizer) {
+                                                     ReportingMode reportingMode, Sanitizer sanitizer,
+                                                     SendErrorHandler errorHandler) {
     if (reportingMode == null) {
       reportingMode = DEFAULT_REPORTING_MODE;
     }
@@ -91,7 +94,17 @@ public class ApptuitReporter extends ScheduledReporter {
       case API_PUT:
       default:
         ApptuitPutClient putClient = new ApptuitPutClient(key, globalTags, apiUrl);
-        return dataPoints -> putClient.put(dataPoints, sanitizer);
+        return dataPoints -> {
+          try {
+            putClient.send(dataPoints, sanitizer);
+          } catch (IOException e) {
+            if (errorHandler != null) {
+              errorHandler.handle(e);
+            } else {
+              LOGGER.log(Level.SEVERE, "Error Sending Datapoints", e);
+            }
+          }
+        };
     }
   }
 

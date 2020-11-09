@@ -61,6 +61,8 @@ public class ApptuitReporterFactory {
 
   private Sanitizer sanitizer = Sanitizer.DEFAULT_SANITIZER;
 
+  private SendErrorHandler errorHandler;
+
   public void addGlobalTag(String tag, String value) {
     globalTags.put(tag, value);
   }
@@ -125,6 +127,14 @@ public class ApptuitReporterFactory {
     return this.sanitizer;
   }
 
+  public SendErrorHandler getErrorHandler() {
+    return errorHandler;
+  }
+
+  public void setErrorHandler(SendErrorHandler errorHandler) {
+    this.errorHandler = errorHandler;
+  }
+
   public MetricFilter getFilter() {
     final StringMatchingStrategy stringMatchingStrategy = getUseRegexFilters()
         ? REGEX_STRING_MATCHING_STRATEGY : DEFAULT_STRING_MATCHING_STRATEGY;
@@ -141,7 +151,7 @@ public class ApptuitReporterFactory {
     try {
       return new ApptuitReporter(registry, getFilter(), getRateUnit(), getDurationUnit(),
           globalTags, apiKey, apiUrl != null ? new URL(apiUrl) : null,
-          reportingMode, sanitizer);
+          reportingMode, sanitizer, errorHandler);
     } catch (MalformedURLException e) {
       throw new IllegalArgumentException(e);
     }
