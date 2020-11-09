@@ -62,14 +62,26 @@ public class PrometheusClientTest {
   public void testBasicAuthQuery() throws Exception {
     PrometheusClient client = new PrometheusClient(MockServer.USER_ID, MockServer.TOKEN, httpServer.getUrl());
     testQueryRange(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader));
-    tearDown();
-    testStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader));
-    tearDown();
-    testUnauthorizedStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader), 0);
-    tearDown();
-    testUnauthorizedStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader), -10 * 1000);
-
   }
+
+  @Test
+  public void testValidStepSize() throws IOException, ResponseStatusException, URISyntaxException {
+    PrometheusClient client = new PrometheusClient(MockServer.USER_ID, MockServer.TOKEN, httpServer.getUrl());
+    testStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader));
+  }
+
+  @Test
+  public void testErrorOnZeroStepSize() throws ResponseStatusException, IOException, URISyntaxException {
+    PrometheusClient client = new PrometheusClient(MockServer.USER_ID, MockServer.TOKEN, httpServer.getUrl());
+    testInvalidStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader), 0);
+  }
+
+  @Test
+  public void testErrorOnNegativeStepSize() throws IOException, ResponseStatusException, URISyntaxException {
+    PrometheusClient client = new PrometheusClient(MockServer.USER_ID, MockServer.TOKEN, httpServer.getUrl());
+    testInvalidStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader), -10 * 1000);
+  }
+
 
   private void testQueryRange(PrometheusClient client, Consumer<String> authHeaderValidator) throws IOException, ResponseStatusException, URISyntaxException {
     long end = System.currentTimeMillis();
@@ -148,7 +160,7 @@ public class PrometheusClientTest {
     assertEquals(Long.valueOf(tuple.getValue()), (Long) tuple.getValueAsLong());
   }
 
-  private void testUnauthorizedStepSize(PrometheusClient client, Consumer<String> authHeaderValidator, long stepSizeMillis) throws IOException, ResponseStatusException, URISyntaxException {
+  private void testInvalidStepSize(PrometheusClient client, Consumer<String> authHeaderValidator, long stepSizeMillis) throws IOException, ResponseStatusException, URISyntaxException {
     long end = System.currentTimeMillis();
     long start = end - 5 * 60 * 1000;
     QueryResponse queryResponse = client.query(start, end, "MOCK QUERY", stepSizeMillis);
