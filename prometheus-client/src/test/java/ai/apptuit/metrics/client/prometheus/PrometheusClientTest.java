@@ -65,19 +65,19 @@ public class PrometheusClientTest {
   }
 
   @Test
-  public void testValidStepSize() throws IOException, ResponseStatusException, URISyntaxException {
+  public void testValidStepSize() throws Exception {
     PrometheusClient client = new PrometheusClient(MockServer.USER_ID, MockServer.TOKEN, httpServer.getUrl());
     testStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader));
   }
 
   @Test
-  public void testErrorOnZeroStepSize() throws ResponseStatusException, IOException, URISyntaxException {
+  public void testErrorOnZeroStepSize() throws Exception {
     PrometheusClient client = new PrometheusClient(MockServer.USER_ID, MockServer.TOKEN, httpServer.getUrl());
     testInvalidStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader), 0);
   }
 
   @Test
-  public void testErrorOnNegativeStepSize() throws IOException, ResponseStatusException, URISyntaxException {
+  public void testErrorOnNegativeStepSize() throws Exception {
     PrometheusClient client = new PrometheusClient(MockServer.USER_ID, MockServer.TOKEN, httpServer.getUrl());
     testInvalidStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader), -10 * 1000);
   }
