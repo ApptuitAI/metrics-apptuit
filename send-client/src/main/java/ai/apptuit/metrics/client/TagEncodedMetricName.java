@@ -28,9 +28,9 @@ import java.util.regex.Pattern;
  */
 public class TagEncodedMetricName implements Comparable<TagEncodedMetricName> {
 
-  private static final Pattern TAG_ENCODED_METRICNAME_PATTERN = Pattern
-      .compile("([\\w\\.-]+)\\[([\\w\\W]+)\\]");
+  private static final Pattern TAG_ENCODED_METRICNAME_PATTERN = Pattern.compile("([^\\[]+)\\[(.*)\\]");
   private static final char TAG_VALUE_SEPARATOR = ':';
+
   private final Map<String, String> tags;
   private final String metricName;
   private String toString;
@@ -55,26 +55,109 @@ public class TagEncodedMetricName implements Comparable<TagEncodedMetricName> {
     Matcher matcher = TAG_ENCODED_METRICNAME_PATTERN.matcher(encodedTagName);
     if (matcher.find() && matcher.groupCount() == 2) {
       metricName = matcher.group(1);
-      String[] tagValuePairs = matcher.group(2).split("\\,");
-      tags = new TreeMap<>();
-      for (String tv : tagValuePairs) {
-        String[] split = tv.split("\\:");
-        if (split.length != 2) {
-          throw new IllegalArgumentException("Could not parse tags {" + tv + "}");
-        }
-
-        String k = split[0].trim();
-        checkEmpty(k, "tag");
-        String v = split[1].trim();
-        checkEmpty(v, "tag value");
-        tags.put(k, v);
-      }
+      tags = parseTags(matcher.group(2));
     } else {
       metricName = encodedTagName;
     }
 
     checkEmpty(metricName, "metricName");
     return new TagEncodedMetricName(metricName, tags);
+  }
+
+  private static Map<String, String> parseTags(String tv) {
+    char[] tagValues = tv.toCharArray();
+    Map<String, String> tags = new TreeMap<>();
+    StringBuilder tagValueBuffer = new StringBuilder();
+
+    int last = 0;
+    parsing:
+    while (last < tagValues.length) {
+      int cur = last;
+
+      //Consume leading whitespace in front of tag
+      while (tagValues[cur] == ' ' || tagValues[cur] == '\t') {
+        cur++;
+        if (cur >= tagValues.length) {
+          break parsing;
+        }
+      }
+
+      //Extract Tag
+      while (tagValues[cur] != TAG_VALUE_SEPARATOR) {
+        cur++;
+        if (cur >= tagValues.length) {
+          throw new IllegalArgumentException("Could not parse tags {" + tv + "}. Last:" + last + ". Index: " + cur);
+        }
+      }
+      String k = new String(tagValues, last, cur - last).trim();
+      checkEmpty(k, "tag");
+
+      //Consume the TAG_VALUE_SEPARATOR
+      if (tagValues[cur] == TAG_VALUE_SEPARATOR) {
+        cur++;
+      } else {
+        throw new IllegalArgumentException("Could not parse tags {" + tv + "}. Last:" + last + ". Index: " + cur);
+      }
+
+      //Consume leading whitespace in front of value
+      while (cur < tagValues.length && (tagValues[cur] == ' ' || tagValues[cur] == '\t')) {
+        cur++;
+      }
+      if (cur >= tagValues.length) {
+        throw new IllegalArgumentException("Could not parse tags {" + tv + "}. Last:" + last + ". Index: " + cur);
+      }
+
+      last = cur;
+      String v;
+      if (tagValues[cur] == '"') {
+        cur++;
+        boolean foundEndQuotedString = false;
+        while (cur < tagValues.length) {
+          char c = tagValues[cur];
+          cur++;
+          if (c == '"') {
+            if (cur < tagValues.length && tagValues[cur] == '"') {
+              //consume escaped quote
+              cur++;
+            } else {
+              foundEndQuotedString = true;
+              break;
+            }
+          }
+          tagValueBuffer.append(c);
+        }
+        if (!foundEndQuotedString) {
+          throw new IllegalArgumentException("Could not parse tags {" + tv + "}. Last:" + last + ". Index: " + cur);
+        }
+        v = tagValueBuffer.toString();
+        tagValueBuffer.setLength(0);
+
+        //Consume trailing whitespace
+        while (cur < tagValues.length && (tagValues[cur] == ' ' || tagValues[cur] == '\t')) {
+          cur++;
+        }
+      } else {
+        while (tagValues[cur] != ',') {
+          cur++;
+          if (cur >= tagValues.length) {
+            break;
+          }
+        }
+        v = new String(tagValues, last, cur - last).trim();
+      }
+      checkEmpty(v, "tag value");
+      tags.put(k, v);
+
+      if (cur < tagValues.length) {
+        if (tagValues[cur] == ',') {
+          cur++;
+        } else {
+          throw new IllegalArgumentException("Could not parse tags {" + tv + "}. Last:" + last + ". Index: " + cur);
+        }
+      }
+      last = cur;
+    }
+    return tags;
   }
 
   private static void checkEmpty(String s, String field) {
@@ -158,13 +241,34 @@ public class TagEncodedMetricName implements Comparable<TagEncodedMetricName> {
       sb.append(prefix);
       sb.append(tagValuePair.getKey());
       sb.append(TAG_VALUE_SEPARATOR);
-      sb.append(tagValuePair.getValue());
+      sb.append(escapeTagValue(tagValuePair.getValue()));
       //prefix = ",\n";
       prefix = ",";
     }
     //sb.append("}\n");
     sb.append("]");
     return sb.toString();
+  }
+
+  private String escapeTagValue(String unescapedTagValue) {
+    char[] chars = unescapedTagValue.toCharArray();
+    boolean needsEscaping = false;
+    for (char c : chars) {
+      switch (c) {
+        case '"':
+        case ' ':
+        case '\t':
+        case ',':
+        case ':':
+          needsEscaping = true;
+          break;
+        default:
+      }
+    }
+    if (!needsEscaping) {
+      return unescapedTagValue;
+    }
+    return "\"" + unescapedTagValue.replace("\"", "\"\"") + "\"";
   }
 
   @Override
