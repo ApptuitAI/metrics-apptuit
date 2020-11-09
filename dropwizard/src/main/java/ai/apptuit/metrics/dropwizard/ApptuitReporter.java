@@ -98,9 +98,9 @@ public class ApptuitReporter extends ScheduledReporter {
           try {
             putClient.send(dataPoints, sanitizer);
           } catch (IOException e) {
-            if(errorHandler!=null) {
+            if (errorHandler != null) {
               errorHandler.handle(e);
-            }else{
+            } else {
               LOGGER.log(Level.SEVERE, "Error Sending Datapoints", e);
             }
           }
