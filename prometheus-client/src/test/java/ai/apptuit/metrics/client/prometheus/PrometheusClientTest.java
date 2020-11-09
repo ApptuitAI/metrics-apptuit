@@ -65,19 +65,19 @@ public class PrometheusClientTest {
   }
 
   @Test
-  public void testValidStepSize() throws Exception {
+  public void testValidStepSize() throws IOException, ResponseStatusException, URISyntaxException {
     PrometheusClient client = new PrometheusClient(MockServer.USER_ID, MockServer.TOKEN, httpServer.getUrl());
     testStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader));
   }
 
   @Test
-  public void testErrorOnZeroStepSize() throws Exception {
+  public void testErrorOnZeroStepSize() throws ResponseStatusException, IOException, URISyntaxException {
     PrometheusClient client = new PrometheusClient(MockServer.USER_ID, MockServer.TOKEN, httpServer.getUrl());
     testInvalidStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader), 0);
   }
 
   @Test
-  public void testErrorOnNegativeStepSize() throws Exception {
+  public void testErrorOnNegativeStepSize() throws IOException, ResponseStatusException, URISyntaxException {
     PrometheusClient client = new PrometheusClient(MockServer.USER_ID, MockServer.TOKEN, httpServer.getUrl());
     testInvalidStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader), -10 * 1000);
   }
@@ -215,6 +215,13 @@ public class PrometheusClientTest {
     assertEquals(3600, PrometheusClient.getStepSize(3600000000L));
     assertEquals(3600, PrometheusClient.getStepSize(3601000000L));
     assertEquals(7200, PrometheusClient.getStepSize(7501000000L));
+  }
+
+  @Test
+  public void testCompleteTrailingSlashURL() throws Exception {
+    assertEquals(new URL("https://api.apptuit.ai/prometheus/"), PrometheusClient.completeTrailingSlashURL(new URL("https://api.apptuit.ai/prometheus")));
+    assertEquals(new URL("https://api.apptuit./"), PrometheusClient.completeTrailingSlashURL(new URL("https://api.apptuit.")));
+    assertEquals(new URL("https://api.apptuit.ai/prometheus/"), PrometheusClient.completeTrailingSlashURL(new URL("https://api.apptuit.ai/prometheus/")));
   }
 
   private static class MockServer {

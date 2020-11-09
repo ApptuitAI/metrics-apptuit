@@ -85,7 +85,7 @@ public class PrometheusClient {
   public QueryResponse query(long startEpochMillis, long endEpochMillis, String promQueryString, long stepSizeMillis)
       throws IOException, ResponseStatusException, URISyntaxException {
 
-    URL queryEndpoint = prometheusEndpoint.toURI().resolve(API_V_1_QUERY_RANGE).toURL();
+    URL queryEndpoint = completeTrailingSlashURL(prometheusEndpoint).toURI().resolve(API_V_1_QUERY_RANGE).toURL();
     HttpURLConnection urlConnection = (HttpURLConnection) queryEndpoint.openConnection();
 
     urlConnection.setConnectTimeout(CONNECT_TIMEOUT_MS);
@@ -138,6 +138,12 @@ public class PrometheusClient {
       default:
         throw new ResponseStatusException(responseCode, response);
     }
+  }
+
+  static URL completeTrailingSlashURL(URL url) throws URISyntaxException, MalformedURLException {
+    String urlPath = url.toURI().toString();
+    urlPath = urlPath.endsWith("/") ? urlPath : (urlPath + "/");
+    return new URL(urlPath);
   }
 
   private String getAuthHeader() {
