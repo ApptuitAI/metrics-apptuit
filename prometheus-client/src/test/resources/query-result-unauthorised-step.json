@@ -1,0 +1,1 @@
+{"status":"error","errorType":"bad_data","error":"zero or negative query resolution step widths are not accepted. Try a positive integer"}
