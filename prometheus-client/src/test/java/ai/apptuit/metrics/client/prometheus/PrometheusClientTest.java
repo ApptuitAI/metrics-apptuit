@@ -21,6 +21,7 @@ import com.sun.net.httpserver.HttpServer;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.theories.suppliers.TestedOn;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -80,6 +81,14 @@ public class PrometheusClientTest {
   public void testErrorOnNegativeStepSize() throws IOException, ResponseStatusException, URISyntaxException {
     PrometheusClient client = new PrometheusClient(MockServer.USER_ID, MockServer.TOKEN, httpServer.getUrl());
     testInvalidStepSize(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader), -10 * 1000);
+  }
+
+  @Test
+  public void testNonTrailingSlashURLRequest() throws Exception {
+    String urlPath = httpServer.getUrl().toString();
+    URL urlWithoutTrailingSlash = new URL(urlPath.substring(0, urlPath.length() - 1));
+    PrometheusClient client = new PrometheusClient(MockServer.USER_ID, MockServer.TOKEN, urlWithoutTrailingSlash);
+    testQueryRange(client, (authorizationHeader) -> assertEquals(MockServer.BASIC_AUTH_HEADER, authorizationHeader));
   }
 
 
@@ -216,6 +225,15 @@ public class PrometheusClientTest {
     assertEquals(3600, PrometheusClient.getStepSize(3601000000L));
     assertEquals(7200, PrometheusClient.getStepSize(7501000000L));
   }
+
+  @Test
+  public void testCompleteTrailingSlashURL() throws Exception {
+    assertEquals(new URL("https://api.apptuit.ai/prometheus/"), PrometheusClient.completeTrailingSlashURL(new URL("https://api.apptuit.ai/prometheus")));
+    assertEquals(new URL("https://api.apptuit./"), PrometheusClient.completeTrailingSlashURL(new URL("https://api.apptuit.")));
+    assertEquals(new URL("https://api.apptuit.ai/prometheus/"), PrometheusClient.completeTrailingSlashURL(new URL("https://api.apptuit.ai/prometheus/")));
+  }
+
+
 
   private static class MockServer {
 
