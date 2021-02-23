@@ -30,41 +30,52 @@ import java.util.logging.Logger;
  */
 public class Package {
 
-  private static final Logger LOGGER = Logger.getLogger(Package.class.getName());
-  public static final String VERSION = loadPackageVersion();
+    private static final Logger LOGGER = Logger.getLogger(Package.class.getName());
+    public static final String VERSION = loadPackageVersion();
 
-  private Package() {
-  }
-
-  private static String loadPackageVersion() {
-    Enumeration<URL> resources = null;
-    try {
-      resources = Package.class.getClassLoader().getResources("META-INF/MANIFEST.MF");
-    } catch (IOException e) {
-      LOGGER.log(Level.SEVERE, "Error locating manifests.", e);
+    private Package() {
     }
 
+    private static String loadPackageVersion() {
+        Enumeration<URL> resources = null;
 
-    while (resources != null && resources.hasMoreElements()) {
-      URL manifestUrl = resources.nextElement();
-      try (InputStream resource = manifestUrl.openStream()) {
-        Manifest manifest = new Manifest(resource);
-        Attributes mainAttributes = manifest.getMainAttributes();
-        if (mainAttributes != null) {
-          String agentClass = mainAttributes.getValue("Implementation-Title");
-          if ("metrics-apptuit".equals(agentClass)) {
-            String packageVersion = mainAttributes.getValue("Implementation-Version");
-            if (packageVersion != null) {
-              return packageVersion;
+        try {
+            String version = Package.class.getPackage().getImplementationVersion();
+            if (version != null) {
+                return version;
             }
-            break;
-          }
-        }
-      } catch (IOException e) {
-        LOGGER.log(Level.SEVERE, "Error loading manifest from [" + manifestUrl + "]", e);
-      }
 
+            ClassLoader classLoader = Package.class.getClassLoader();
+            if (classLoader == null) {
+                return "?";
+            }
+            resources = classLoader.getResources("META-INF/MANIFEST.MF");
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Error locating manifests.", e);
+        }
+
+
+        while (resources != null && resources.hasMoreElements()) {
+            URL manifestUrl = resources.nextElement();
+            try (InputStream resource = manifestUrl.openStream()) {
+                Manifest manifest = new Manifest(resource);
+                Attributes mainAttributes = manifest.getMainAttributes();
+                if (mainAttributes != null) {
+                    String agentClass = mainAttributes.getValue("Implementation-Title");
+                    //the agent class comes as "metrics-apptuit-send-client"
+                    if (agentClass != null && agentClass.contains("metrics-apptuit")) {
+                        String packageVersion = mainAttributes.getValue("Implementation-Version");
+                        if (packageVersion != null) {
+                            return packageVersion;
+                        }
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "Error loading manifest from [" + manifestUrl + "]", e);
+            }
+
+        }
+        return "?";
     }
-    return "?";
-  }
 }
