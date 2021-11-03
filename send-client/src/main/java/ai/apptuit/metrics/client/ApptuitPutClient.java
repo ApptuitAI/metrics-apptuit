@@ -92,10 +92,11 @@ public class ApptuitPutClient {
   }
 
   public void send(Collection<DataPoint> dataPoints) throws ConnectException, ResponseStatusException, IOException {
-    send(dataPoints, DEFAULT_SANITIZER);
+    send(dataPoints, new Sanitizer.CachingSanitizer(DEFAULT_SANITIZER));
   }
 
   public void send(Collection<DataPoint> dataPoints, Sanitizer sanitizer) throws ConnectException, ResponseStatusException, IOException {
+
 
     if (dataPoints.isEmpty()) {
       return;

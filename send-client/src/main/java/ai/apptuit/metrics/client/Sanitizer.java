@@ -16,6 +16,13 @@
 
 package ai.apptuit.metrics.client;
 
+import sun.security.util.Cache;
+
+import java.security.PublicKey;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 public interface Sanitizer {
 
   Sanitizer PROMETHEUS_SANITIZER = new PrometheusSanitizer();
@@ -30,10 +37,10 @@ public interface Sanitizer {
     }
 
     public String sanitizer(String unSanitizedString) {
+
       return ((Character.isDigit(unSanitizedString.charAt(0)) ? "_" : "")
               + unSanitizedString).replaceAll("[^a-zA-Z0-9_]", "_")
               .replaceAll("[_]+", "_");
-
     }
   }
 
@@ -55,4 +62,38 @@ public interface Sanitizer {
       return unSanitizedString;
     }
   }
-}
+
+  class CachingSanitizer implements  Sanitizer {
+    Sanitizer sanitizer;
+    private Map<String, String> sanitizedTagsCache = new LRUCachingLinkedHashMap<>(10000);
+    public CachingSanitizer(Sanitizer sanitizer1) {
+      sanitizer = sanitizer1;
+    }
+
+    @Override
+    public String sanitizer(String unSanitizedString) {
+      String sanitizedString = sanitizedTagsCache.get(unSanitizedString);
+      if (sanitizedString != null) {
+        return sanitizedString;
+      }
+      sanitizedString = this.sanitizer.sanitizer(unSanitizedString);
+      sanitizedTagsCache.put(unSanitizedString, sanitizedString);
+      return sanitizedString;
+    }
+  }
+
+  class LRUCachingLinkedHashMap<K, V> extends LinkedHashMap<K, V> {
+    private int capacity;
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+      return (size() > this.capacity);
+    }
+
+    public LRUCachingLinkedHashMap(int capacity) {
+      super(capacity + 1, 1.0f, true);
+      this.capacity = capacity;
+    }
+
+  }
+
+  }
