@@ -16,10 +16,6 @@
 
 package ai.apptuit.metrics.client;
 
-import sun.security.util.Cache;
-
-import java.security.PublicKey;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
