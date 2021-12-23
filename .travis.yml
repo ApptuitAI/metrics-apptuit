@@ -54,6 +54,10 @@ before_install:
     if [[ "$encrypted_60ba2f79b530_key" != "" ]]; then
       openssl aes-256-cbc -K $encrypted_60ba2f79b530_key -iv $encrypted_60ba2f79b530_iv -in conf/signingkey.asc.enc -out conf/signingkey.asc -d;
     fi
+  - |
+    if [[ "$encrypted_60ba2f79b530_key" != "" ]]; then
+      gpg2 --keyring=$TRAVIS_BUILD_DIR/pubring.gpg --no-default-keyring --import conf/signingkey.asc;
+    fi
 
 install:
   - sudo apt-get -qq update
