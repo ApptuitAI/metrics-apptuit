@@ -20,6 +20,7 @@ limitations under the License.
     <version>${revision}</version>
     <packaging>pom</packaging>
     <name>metrics-apptuit</name>
+    <description>Dropwizard/codahale metrics reporter for sending metrics to Apptuit.AI</description>    
     <url>https://github.com/ApptuitAI/metrics-apptuit/</url>
     <inceptionYear>2017</inceptionYear>
     <scm>
@@ -37,6 +38,14 @@ limitations under the License.
             <url>https://github.com/ApptuitAI/metrics-apptuit/blob/master/LICENSE</url>
         </license>
     </licenses>
+    <developers>
+        <developer>
+            <name>JInsight Developers</name>
+            <email>hello+jinsight@apptuit.ai</email>
+            <organization>apptuit.ai</organization>
+            <organizationUrl>https://apptuit.ai</organizationUrl>
+        </developer>
+    </developers>
 
     <distributionManagement>
         <snapshotRepository>
@@ -50,7 +59,7 @@ limitations under the License.
     </distributionManagement>
 
     <properties>
-        <revision>1.0-SNAPSHOT</revision>
+        <revision>0.9.6</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -239,6 +248,18 @@ limitations under the License.
                         <id>generate-sources-jar</id>
                         <goals>
                             <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
                         </goals>
                     </execution>
                 </executions>
