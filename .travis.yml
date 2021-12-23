@@ -71,13 +71,16 @@ before_script:
   - echo $TRAVIS_TAG
   - echo $PACKAGE_VERSION
   - echo $IS_PRIMARY_MATRIX_JOB
+  - export COMMON_MVN_FLAGS=-Dgpg.executable=gpg2 -Dgpg.keyname=A452BB8DE82F7D80A96505E3AF1DC1208A6106B5 -Dgpg.passphrase=$PASSPHRASE\
+    -Dgpg.publicKeyring=$TRAVIS_BUILD_DIR/pubring.gpg -Dgpg.secretKeyring=$TRAVIS_BUILD_DIR/secring.gpg\
+    -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
 
 script:
   - |
     if [[ "$SONAR_ENABLED" = "true" ]] && [[ "$TRAVIS_PULL_REQUEST" = "false" ]] && [[ "$IS_PRIMARY_MATRIX_JOB" = "true" ]]; then
-      mvn verify sonar:sonar -Denv.server.ip=127.0.0.1 -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
+      mvn verify sonar:sonar -Denv.server.ip=127.0.0.1 -B $COMMON_MVN_FLAGS
     else
-      mvn verify -Denv.server.ip=127.0.0.1 -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
+      mvn verify -Denv.server.ip=127.0.0.1 -B $COMMON_MVN_FLAGS
     fi
 
 after_success:
@@ -89,10 +92,7 @@ after_success:
 
 deploy:
   - provider: script
-    script: mvn -s conf/maven-settings.xml deploy -DskipTests -B
-      -Dgpg.executable=gpg2 -Dgpg.keyname=A452BB8DE82F7D80A96505E3AF1DC1208A6106B5
-      -Dgpg.passphrase=$PASSPHRASE -Dgpg.publicKeyring=$TRAVIS_BUILD_DIR/pubring.gpg -Dgpg.secretKeyring=$TRAVIS_BUILD_DIR/secring.gpg
-      -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
+    script: mvn -s conf/maven-settings.xml deploy -DskipTests -B $COMMON_MVN_FLAGS
       -Dsonar.projectKey=${SONAR_PROJECT} -Dsonar.login=${SONAR_TOKEN}
     skip_cleanup: true
     on:
