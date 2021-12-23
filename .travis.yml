@@ -46,7 +46,10 @@ cache:
     - '$HOME/.codacy/reporter'
 
 before_install:
-  - openssl aes-256-cbc -K $encrypted_8ef7f618d741_key -iv $encrypted_8ef7f618d741_iv -in conf/signingkey.asc.enc -out conf/signingkey.asc -d
+  - |
+    if [[ "$TRAVIS_PULL_REQUEST" = "false" ]]; then
+      openssl aes-256-cbc -K $encrypted_8ef7f618d741_key -iv $encrypted_8ef7f618d741_iv -in conf/signingkey.asc.enc -out conf/signingkey.asc -d
+    fi
   - sudo apt-get install -qq -y jq
   - wget -nv -O ~/.codacy/reporter/codacy-reporter-latest.jar https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/4.0.1/codacy-coverage-reporter-4.0.1-assembly.jar
 
