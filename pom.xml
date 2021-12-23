@@ -271,7 +271,7 @@ limitations under the License.
                     <excludes>
                         <exclude>src/test/resources/META-INF/MANIFEST.MF</exclude>
                         <exclude>src/test/resources/query-result-*.json</exclude>
-                        <exclude>conf/signingkey.asc.enc</exclude>
+                        <exclude>conf/signingkey.*</exclude>
                     </excludes>
                     <ignoreErrors>${ignore.license.checks}</ignoreErrors>
                     <reportStyle>xml</reportStyle>
