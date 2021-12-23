@@ -71,9 +71,9 @@ before_script:
   - echo $TRAVIS_TAG
   - echo $PACKAGE_VERSION
   - echo $IS_PRIMARY_MATRIX_JOB
-  - export COMMON_MVN_FLAGS=-Dgpg.executable=gpg2 -Dgpg.keyname=A452BB8DE82F7D80A96505E3AF1DC1208A6106B5 -Dgpg.passphrase=$PASSPHRASE\
-    -Dgpg.publicKeyring=$TRAVIS_BUILD_DIR/pubring.gpg -Dgpg.secretKeyring=$TRAVIS_BUILD_DIR/secring.gpg\
-    -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
+  - export COMMON_MVN_FLAGS="-Dgpg.executable=gpg2 -Dgpg.keyname=A452BB8DE82F7D80A96505E3AF1DC1208A6106B5 -Dgpg.passphrase=$PASSPHRASE
+    -Dgpg.publicKeyring=$TRAVIS_BUILD_DIR/pubring.gpg -Dgpg.secretKeyring=$TRAVIS_BUILD_DIR/secring.gpg
+    -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN"
 
 script:
   - |
