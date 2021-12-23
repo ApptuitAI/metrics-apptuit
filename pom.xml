@@ -38,14 +38,6 @@ limitations under the License.
         </license>
     </licenses>
 
-    <distributionManagement>
-        <repository>
-            <id>bintray-metrics-apptuit</id>
-            <name>metrics-apptuit</name>
-            <url>https://api.bintray.com/maven/apptuitai/maven/metrics-apptuit/;publish=1</url>
-        </repository>
-    </distributionManagement>
-
     <properties>
         <revision>1.0-SNAPSHOT</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -98,6 +90,26 @@ limitations under the License.
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.0.0-M3</version>
+                <executions>
+                    <execution>
+                        <id>enforce-maven</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>3.0.5</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>

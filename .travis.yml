@@ -18,6 +18,10 @@ language: java
 sudo: false
 
 env:
+  global:
+    - secure: Opc5TWNibdokNCbOVNXXQXylqzUI5Vpg7Ntkl6qjEHPV5VsKMqaRuS57R8ydGLOx3wgys6JTJRXN3OMDr5T/wRwVpwDi3fsrhCxdcMGr+v6g9W60MmH26bVFNpnz1P85wUPOdeA0YQQOz7DjXRp/Y/+xYj+0udsRgx6TOCvPfyE6EMNedj8jWuhR4gw/PGQ/aUMC4aKd06IdIMpKax+jBA+kPLDYMZVM+m+aH49pNnnKVKg+HnJSyKg62yhUml1IljGc893nNQE30o9I6L6aRilXaNA/SPQkjzU106hjd6Q2QXEwP2QNrYoOl7Ad/vrtRHkBcjGzcvjnomPGYrK/bkhb2s65J8BxCrxVnbn5PC6YM8BKBTY6Zz30PVtNH3bnrSK/COjLb2U78lem0gIiGeFK75mZCC2aDbQyjqDN1U81M2i73fcQCH9z3R/ORVyex8eOjGDckjpI/oySLJRNOTBuV5OrvwEXVG+1D3qhioZJVMO68oWgP5ggx3Pd7VBculCTHtLRbs02ntv8/22kwbe13xq88DzZbLAPzKAOH1gP1FBgD81RO9lUnQd/w7ORHwEjXte5JQAKrpJ+xekMX3f70ELI3bveNTyaUrXRzI/DU3owki4csFWRYpBIh370HysBf5pke2oKyqiKQslTQr35OKaS2OOEJd9eEy0/0A0=
+    - secure: hLIzmbokSkafJ3DtvIoBOmzCuLPf8raEupsAz1vmfXRUdpT48dFaUbDLDgfrzZbRYOL1n4dJC24FU3K3CU9UEZV4lw96a1mPnhT80bxw0UqaE5WoORhW9UNJ4szwnzwfQIR+sfiFrGk5qpABVk9Ygq4U0AeV3OpnQ1KYJFMxtmEDoTt4MQ1PA4qU1uF0xF80+qoJCwmuLrX4WHR0MwL0BiDCwjJOnaZMAkqtsqRbiWpzf/2e44LPasDw/l34vS4quuAWNW+PDgJtBsKZTY1jEn6CtbBQS0KykcwG+Q4Kmir5WnMwzOss+3SSjxqH9W2FOZGxxwnXWAyw/5NVAi3ujbq0I+vt7VhfpgD7KLisbC0sm08F2A3PxawJGwKdQjcNFNoQgsDZcIVVczDM9He7+uS2twiOYI+wQtxyyjrtxFy9y+Z+5rHxtFS0HNNp2iItrOlIsMPKlXw66usT1YCYIDqhy51ZF2ESdlZcIMOg78LobJjU4MIOcZE6gw5qjey+Ndl3AJ65td72Ue1D3duKxsagLCnGoj5THy9BT4EutM0JFh1+5B0hoGGhcnzuOwI0l5ksxYMtunZrIhYvvMG9Lz+LDWYvQMEmpFZvkAVYSVGZnNWBCzXLc3WCjNlqhf/TLqKzOoR57KlzDLApQWMoRvFpzqRSo7cIW1Sq1+fTVqs=
+    - secure: DdSo7259Ci61uw5xe0cftkEQDC1Juz6MBPDCR7xSgqOmxJIQRW+iBFFe/P71rPvH9HmJslBFjyDP0l4GsF9LFh7DQLgDOwhi+D50vBVfp7w0qwne69u2HYT5+yMTyidyMDbuP+El9iVbS7WSJRWpPYY7abbMuR/2WpkXJmnwRZjjf9qo4Asb4hbTktKTsHtGll+JL2O6rK8ZuV8GQqDQFCms7fQh8zphNnRmC2yPUCK/p3Zuwrbn9QnpyfXUhoBDdL+gSmX+EZlit5dc+pBBXMlN4p9R6dXbUoSwzw5mhPPEbZGZVw3MhRjEOt0TDCArHOFjcqEcRBmlaCMbbqKOvndsJCScxfsjqetbQdki5OqeMJel0v5ZLCgPtuLCK3FnAlIAimLhs+pxEKwAmr+06YcQb9/2esuA6pFpbOL26KIRFKJrHaqc1egUHasOHg81KotwyJSotj8+kL7qDSj9Zvhgxc9xOXEQGdbZkpXJwEepGq9I1qvYZW9gcKQzNoueoFxkdXYt7Epk9+yKzrr4E4ZGg1NNDobUxnSulh2qjBr7tYO2ZwR+U60Zwq3P66hpGQ8Vd6ZmFAa2oIXsJCDQbADWCQd8+YIak9FL585FFCNLA5VYzeNoAeqlflaG5Bp+QRR8elHCAskhbjKAhIuaNbh1ym8IsZGllacdMFH39Ew=
   matrix:
     - METRICS_VERSION=3.1.0
     - METRICS_VERSION=3.2.6
@@ -29,7 +33,7 @@ jdk:
 
 services:
   - memcached
-  - redis-server
+  - redis
 
 addons:
   sonarcloud:
@@ -42,6 +46,7 @@ cache:
     - '$HOME/.codacy/reporter'
 
 before_install:
+  - openssl aes-256-cbc -K $encrypted_8ef7f618d741_key -iv $encrypted_8ef7f618d741_iv -in conf/signingkey.asc.enc -out conf/signingkey.asc -d
   - sudo apt-get install -qq -y jq
   - wget -nv -O ~/.codacy/reporter/codacy-reporter-latest.jar https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/4.0.1/codacy-coverage-reporter-4.0.1-assembly.jar
 
@@ -76,10 +81,15 @@ after_success:
       bash <(curl -s https://codecov.io/bash);
       java -cp ~/.codacy/reporter/codacy-reporter-latest.jar com.codacy.CodacyCoverageReporter -l Java -r target/site/jacoco/jacoco.xml;
     fi
-
+  - gpg2 --keyring=$TRAVIS_BUILD_DIR/pubring.gpg --no-default-keyring --import conf/signingkey.asc
+  - gpg2 --allow-secret-key-import --keyring=$TRAVIS_BUILD_DIR/secring.gpg --no-default-keyring --import conf/signingkey.asc
 deploy:
   - provider: script
-    script: "mvn -s .maven.settings.xml deploy -DskipTests -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dsonar.projectKey=${SONAR_PROJECT} -Dsonar.login=${SONAR_TOKEN}"
+    script: mvn -s conf/maven-settings.xml deploy -DskipTests -B
+      -Dgpg.executable=gpg2 -Dgpg.keyname=A452BB8DE82F7D80A96505E3AF1DC1208A6106B5
+      -Dgpg.passphrase=$PASSPHRASE -Dgpg.publicKeyring=$TRAVIS_BUILD_DIR/pubring.gpg -Dgpg.secretKeyring=$TRAVIS_BUILD_DIR/secring.gpg
+      -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
+      -Dsonar.projectKey=${SONAR_PROJECT} -Dsonar.login=${SONAR_TOKEN}
     skip_cleanup: true
     on:
       tags: true
