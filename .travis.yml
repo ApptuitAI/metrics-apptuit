@@ -46,15 +46,14 @@ cache:
     - '$HOME/.codacy/reporter'
 
 before_install:
-  - sudo apt-get install -qq -y gnupg2
+  - sudo apt-get install -qq -y jq
+  - wget -nv -O ~/.codacy/reporter/codacy-reporter-latest.jar https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/4.0.1/codacy-coverage-reporter-4.0.1-assembly.jar
   - |
     if [[ "$encrypted_60ba2f79b530_key" != "" ]]; then
       openssl aes-256-cbc -K $encrypted_60ba2f79b530_key -iv $encrypted_60ba2f79b530_iv -in conf/signingkey.asc.enc -out conf/signingkey.asc -d;
-      gpg2 --keyring=$TRAVIS_BUILD_DIR/pubring.gpg --no-default-keyring --import conf/signingkey.asc;
-      gpg2 --allow-secret-key-import --keyring=$TRAVIS_BUILD_DIR/secring.gpg --no-default-keyring --import conf/signingkey.asc;
+      gpg2 --batch --keyring=$TRAVIS_BUILD_DIR/pubring.gpg --no-default-keyring --import conf/signingkey.asc;
+      gpg2 --batch --allow-secret-key-import --keyring=$TRAVIS_BUILD_DIR/secring.gpg --no-default-keyring --import conf/signingkey.asc;
     fi
-  - sudo apt-get install -qq -y jq
-  - wget -nv -O ~/.codacy/reporter/codacy-reporter-latest.jar https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/4.0.1/codacy-coverage-reporter-4.0.1-assembly.jar
 
 install:
   - sudo apt-get -qq update
