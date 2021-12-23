@@ -1,5 +1,5 @@
 [![Download](https://img.shields.io/maven-central/v/ai.apptuit.metrics/metrics-apptuit)](https://github.com/ApptuitAI/metrics-apptuit/releases/latest)
-[![Build Status](https://img.shields.io/travis/ApptuitAI/metrics-apptuit.svg)](https://travis-ci.org/ApptuitAI/metrics-apptuit)
+[![Build Status](https://img.shields.io/travis/ApptuitAI/metrics-apptuit.svg)](https://travis-ci.com/ApptuitAI/metrics-apptuit)
 [![Sonar Cloud](https://sonarcloud.io/api/project_badges/measure?project=ai.apptuit.metrics%3Ametrics-apptuit&metric=alert_status)](https://sonarcloud.io/dashboard?id=ai.apptuit.metrics:metrics-apptuit)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/83505325e2d5444a8cec38b1931d57e9)](https://www.codacy.com/gh/ApptuitAI/metrics-apptuit/dashboard)
 [![Code Coverage](https://img.shields.io/codecov/c/github/ApptuitAI/metrics-apptuit.svg)](https://codecov.io/gh/ApptuitAI/metrics-apptuit)
