@@ -59,7 +59,9 @@ limitations under the License.
     </distributionManagement>
 
     <properties>
-        <revision>0.9.6</revision>
+        <revision>1.0-SNAPSHOT</revision>
+        <skip.signing>true</skip.signing>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -350,6 +352,7 @@ limitations under the License.
                             <goal>sign</goal>
                         </goals>
                         <configuration>
+                            <skip>${skip.signing}</skip>
                             <gpgArguments>
                                 <arg>--pinentry-mode</arg>
                                 <arg>loopback</arg>
