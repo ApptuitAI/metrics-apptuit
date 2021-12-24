@@ -69,7 +69,8 @@ before_script:
   - echo $TRAVIS_TAG
   - echo $PACKAGE_VERSION
   - echo $IS_PRIMARY_MATRIX_JOB
-  - export COMMON_MVN_FLAGS="-Dgpg.executable=gpg2 -Dgpg.keyname=8A6106B5 -Dgpg.passphrase=$GPG_PASSPHRASE
+  - export COMMON_MVN_FLAGS="-s conf/maven-settings.xml
+    -Dgpg.executable=gpg2 -Dgpg.keyname=8A6106B5 -Dgpg.passphrase=$GPG_PASSPHRASE
     -Dgpg.publicKeyring=$TRAVIS_BUILD_DIR/pubring.gpg -Dgpg.secretKeyring=$TRAVIS_BUILD_DIR/secring.gpg
     -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN"
 
@@ -90,7 +91,7 @@ after_success:
 
 deploy:
   - provider: script
-    script: mvn -s conf/maven-settings.xml deploy -DskipTests -B $COMMON_MVN_FLAGS
+    script: mvn deploy -DskipTests -B -Dskip.signing=false $COMMON_MVN_FLAGS
       -Dsonar.projectKey=${SONAR_PROJECT} -Dsonar.login=${SONAR_TOKEN}
     skip_cleanup: true
     on:
