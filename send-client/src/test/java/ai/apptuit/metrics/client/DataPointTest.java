@@ -239,6 +239,23 @@ public class DataPointTest {
     DataPoint dp = Util.jsonToDataPoint(jsonTxt);
     assertEquals(dataPoint, dp);
   }
+  @Test
+  public void testToJsonWithEscapeQuotesInTagValue() throws Exception {
+    long epoch = System.currentTimeMillis();
+    long value = 1515;
+    tagEncodedMetricName = TagEncodedMetricName.decode("proc.stat.cpu")
+            .withTags("host", "myhost", "type", "\"idle\"");
+    DataPoint dataPoint = new DataPoint(tagEncodedMetricName.getMetricName(),
+            epoch, value, tagEncodedMetricName.getTags());
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    dataPoint.toJson(new PrintStream(out), null, Sanitizer.NO_OP_SANITIZER);
+    String jsonTxt = out.toString();
+
+    DataPoint dp = Util.jsonToDataPoint(jsonTxt);
+    assertEquals(dataPoint, dp);
+    assertEquals("\"idle\"", dp.getTags().get("type"));
+  }
 
   @Test
   public void testToJsonWithGlobalTags() throws Exception {

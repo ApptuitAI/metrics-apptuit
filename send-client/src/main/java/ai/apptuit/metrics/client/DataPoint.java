@@ -93,7 +93,7 @@ public class DataPoint {
       while (iterator.hasNext()) {
         Entry<String, String> tag = iterator.next();
         ps.append("\n\"").append(sanitizer.sanitizer(tag.getKey())).append("\":\"")
-                .append(tag.getValue()).append("\"");
+                .append(tag.getValue().replace("\"", "\\\"")).append("\"");
         if (iterator.hasNext()) {
           ps.append(",");
         }
