@@ -16,8 +16,6 @@
 
 package ai.apptuit.metrics.client;
 
-import org.graalvm.compiler.api.replacements.Snippet;
-
 import static ai.apptuit.metrics.client.Sanitizer.DEFAULT_SANITIZER;
 
 import java.io.BufferedOutputStream;
