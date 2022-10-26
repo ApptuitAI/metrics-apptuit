@@ -93,16 +93,13 @@ public class ApptuitPutClient {
   }
 
   public void send(Collection<DataPoint> dataPoints, Sanitizer sanitizer) throws ConnectException, ResponseStatusException, IOException {
-    send(dataPoints, sanitizer, new HashMap<>());
+    send(dataPoints, sanitizer, null);
   }
   public void send(Collection<DataPoint> dataPoints, Sanitizer sanitizer, Map<String, String> reqHeaders) throws ConnectException, ResponseStatusException, IOException {
 
 
     if (dataPoints.isEmpty()) {
       return;
-    }
-    if (reqHeaders == null) {
-      reqHeaders = new HashMap<>();
     }
 
     DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags, sanitizer);
@@ -121,7 +118,9 @@ public class ApptuitPutClient {
         urlConnection.setRequestProperty(CONTENT_ENCODING, CONTENT_ENCODING_GZIP);
       }
       urlConnection.setRequestProperty("Authorization", generateAuthHeader());
-      reqHeaders.forEach(urlConnection::setRequestProperty);
+      if (reqHeaders != null && !reqHeaders.isEmpty()) {
+        reqHeaders.forEach(urlConnection::setRequestProperty);
+      }
       urlConnection.setRequestMethod("POST");
       urlConnection.setDoInput(true);
       urlConnection.setDoOutput(true);
