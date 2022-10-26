@@ -31,10 +31,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
@@ -96,6 +93,9 @@ public class ApptuitPutClient {
   }
 
   public void send(Collection<DataPoint> dataPoints, Sanitizer sanitizer) throws ConnectException, ResponseStatusException, IOException {
+    send(dataPoints, sanitizer, null);
+  }
+  public void send(Collection<DataPoint> dataPoints, Sanitizer sanitizer, Map<String, String> reqHeaders) throws ConnectException, ResponseStatusException, IOException {
 
 
     if (dataPoints.isEmpty()) {
@@ -118,6 +118,9 @@ public class ApptuitPutClient {
         urlConnection.setRequestProperty(CONTENT_ENCODING, CONTENT_ENCODING_GZIP);
       }
       urlConnection.setRequestProperty("Authorization", generateAuthHeader());
+      if (reqHeaders != null && !reqHeaders.isEmpty()) {
+        reqHeaders.forEach(urlConnection::setRequestProperty);
+      }
       urlConnection.setRequestMethod("POST");
       urlConnection.setDoInput(true);
       urlConnection.setDoOutput(true);
